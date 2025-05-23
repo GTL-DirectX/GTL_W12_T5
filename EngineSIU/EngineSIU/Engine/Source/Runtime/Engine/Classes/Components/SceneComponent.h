@@ -80,7 +80,7 @@ public:
 protected:
     /** 부모 컴포넌트로부터 상대적인 위치 */
     UPROPERTY
-    (FVector, RelativeLocation)
+    (EPropertyFlags::EditAnywhere, ({ .ClampMin = 0.1f, .ClampMax = 1.3f }), FVector, RelativeLocation, = FVector())
 
     /** 부모 컴포넌트로부터 상대적인 회전 */
     UPROPERTY

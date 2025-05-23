@@ -114,10 +114,68 @@ protected:
     )
     
     UPROPERTY(
-        EditAnywhere,
+        EditAnywhere, { .EditCondition = [](UObject* Object){ return CastChecked<AFish>(Object)->my_bool; } },
         FChildStruct, Struct2, {}
     )
-    
+
+    UPROPERTY(
+        EditAnywhere, ({
+            .ToolTip = "Enum이 Test2면 표시",
+            .EditCondition = [](UObject* Object) { return CastChecked<AFish>(Object)->Struct2.TestEnum == ETestEnum::Test2; }
+        }),
+        FTransform, TestTransform,
+    )
+
+    UPROPERTY(
+        EditAnywhere, { .DisplayName = "hello" },
+        FVector, V1elocity, = FVector::ZeroVector;
+    )
+
+    UPROPERTY(
+        EditAnywhere, ({ .DisplayName = "My u8", .ToolTip = "wa u8" }),
+        uint8, u8, = 0;
+    )
+
+    UPROPERTY(
+        EditAnywhere, { .ToolTip = "wa 123" },
+        uint8, gudtldn, = 0;
+    )
+
+    UPROPERTY(
+        EditAnywhere, ({ .ToolTip = "hide alpha", .HideAlphaChannel = true }),
+        FColor, color, = FColor::Blue;
+    )
+
+    UPROPERTY(
+        EditAnywhere, ({ .ToolTip = "hide alpha linear", .HideAlphaChannel = true }),
+        FLinearColor, lcolor, = FLinearColor::Black;
+    )
+
+    UPROPERTY(
+        EditAnywhere, ({ .ToolTip = "DragDeltaSpeed 123", .DragDeltaSpeed = 123, .ClampMin = 20.0f, .ClampMax = 200.0f }),
+        uint32, u32, = 0;
+    )
+
+    UPROPERTY(
+        EditAnywhere, ({ .ToolTip = "DragDeltaSpeed 0.123f", .DragDeltaSpeed = 0.123f }),
+        float, f32, = 0;
+    )
+
+    UPROPERTY(
+        EditAnywhere, ({ .ToolTip = "DragDeltaSpeed 0.123f", .InlineEditConditionToggle = true }),
+        bool, my_bool, = false;
+    )
+
+    UPROPERTY(
+        EditAnywhere, { .ToolTip = "Inline String" },
+        FString, InlineString,;
+    )
+
+    UPROPERTY(
+        EditAnywhere | EditInline, { .EditCondition = [](UObject* Object){ return CastChecked<AFish>(Object)->my_bool; } },
+        TArray<AFish*>, Objects,;
+    )
+
     void Move(float DeltaTime);
 
     void RotateMesh();

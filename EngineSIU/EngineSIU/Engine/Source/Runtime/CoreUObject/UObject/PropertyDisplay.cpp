@@ -55,7 +55,6 @@ struct FPropertyUIHelper
         else if constexpr (std::same_as<NumType, double>) { DataType = ImGuiDataType_Double; }
         else { static_assert(TAlwaysFalse<NumType>); }
 
-        ImGui::Dummy(ImVec2(0.0f, 7.0f));
         ImGui::Text("%s", PropertyLabel);
         if (Metadata.ToolTip.IsSet())
         {
@@ -754,7 +753,6 @@ void FDistributionVectorProperty::DisplayRawDataInImGui(const char* PropertyLabe
     
     ImGui::BeginDisabled(HasAnyFlags(Flags, EPropertyFlags::VisibleAnywhere));
     {
-        ImGui::Dummy(ImVec2(0.0f, 10.0f));
         FDistributionVector* Data = static_cast<FDistributionVector*>(DataPtr);
         ImGui::Text("%s", PropertyLabel);
         FImGuiWidget::DrawVec3Control("MinValue", Data->MinValue);

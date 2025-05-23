@@ -94,8 +94,13 @@ consteval EPropertyType GetPropertyType()
         // if문을 주석처리한 이유는 여기서 컴파일 타임에 UObject를 상속받은 클래스에 대해서 상속여부 검사를 하는데, 이때 UObject의 IsA<T>를 실제로 인스턴싱을 하게 됩니다.
         // 하지만 이 시점에서 IsA의 requires std::derived_from<T, UObject>가 T에 대한 완전한 타입정보를 가지고 있지 않기 때문에 false로 평가되어 컴파일 에러가 발생합니다.
         // 지금은 그냥 IsA의 requires를 제거하였습니다.
-        
-        if constexpr (std::derived_from<PointedToType, UMaterial>) { return EPropertyType::Material; } // UObject보다 먼저 검사
+
+        // UObject보다 먼저 검사
+        if constexpr (std::derived_from<PointedToType, UMaterial>)
+        {
+            return EPropertyType::Material;
+        }
+
         // PointedToType가 완전한 타입일 때만 true를 반환.
         // 전방 선언 시 false가 될 수 있음.
         else if constexpr (std::derived_from<PointedToType, UObject>)
