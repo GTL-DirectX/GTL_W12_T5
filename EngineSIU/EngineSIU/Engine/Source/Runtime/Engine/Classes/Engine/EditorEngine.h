@@ -1,6 +1,7 @@
 #pragma once
 #include "Engine.h"
 #include "Actors/Player.h"
+#include "World/PhysicsViewerWorld.h"
 #include "World/SkeletalViewerWorld.h"
 
 /*
@@ -27,6 +28,7 @@ public:
 
     UWorld* PIEWorld = nullptr;
     USkeletalViewerWorld* SkeletalMeshViewerWorld = nullptr;
+    UPhysicsViewerWorld* PhysicsViewerWorld = nullptr;
     UParticleViewerWorld* ParticleViewerWorld = nullptr;
     UWorld* EditorWorld = nullptr;
     
@@ -34,10 +36,12 @@ public:
     void StartPIE();
     void StartSkeletalMeshViewer(FName SkeletalMeshName, UAnimationAsset* AnimAsset);
     void StartParticleViewer(FName ParticleName, UParticleSystem* ParticleSystem);
+    void StartPhysicsViewer(FName SkeletalMeshName);
 
     void EndPIE();
     void EndSkeletalMeshViewer();
     void EndParticleViewer();
+    void EndPhysicsViewer();
     
     void BindEssentialObjects();
 
