@@ -10,6 +10,7 @@
     내부적으로 PIE, Editor World 두 가지 형태로 관리.
 */
 
+class USimulationViewerWorld;
 class UParticleViewerWorld;
 class UParticleSystem;
 class AActor;
@@ -29,17 +30,21 @@ public:
     UWorld* PIEWorld = nullptr;
     USkeletalViewerWorld* SkeletalMeshViewerWorld = nullptr;
     UPhysicsViewerWorld* PhysicsViewerWorld = nullptr;
+    UWorld* SimulationViewerWorld = nullptr;
     UParticleViewerWorld* ParticleViewerWorld = nullptr;
     UWorld* EditorWorld = nullptr;
     
 
     void StartPIE();
     void StartSkeletalMeshViewer(FName SkeletalMeshName, UAnimationAsset* AnimAsset);
+    void StartSimulationViewer(FName SimulationName);
     void StartParticleViewer(FName ParticleName, UParticleSystem* ParticleSystem);
     void StartPhysicsViewer(FName SkeletalMeshName);
 
     void EndPIE();
     void EndSkeletalMeshViewer();
+    void EndSimulationViewer();
+    
     void EndParticleViewer();
     void EndPhysicsViewer();
     

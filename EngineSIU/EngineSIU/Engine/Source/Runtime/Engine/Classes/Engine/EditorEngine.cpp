@@ -18,6 +18,7 @@
 #include "PropertyEditor/ParticleViewerPanel.h"
 #include "UnrealEd/UnrealEd.h"
 #include "World/ParticleViewerWorld.h"
+#include "World/SimulationViewrWorld.h"
 
 extern FEngineLoop GEngineLoop;
 
@@ -183,6 +184,27 @@ void UEditorEngine::StartPIE()
     // WorldList.Add(GetWorldContextFromWorld(PIEWorld));
 }
 
+void UEditorEngine::StartSimulationViewer(FName SimulationName)
+{
+    if (SimulationViewerWorld or !PhysicsViewerWorld)
+    {
+        UE_LOG(ELogLevel::Warning, TEXT("SimulationWorld already exists!"));
+        return;
+    }
+
+    this->ClearActorSelection(); // Editor World 기준 Select Actor 해제
+    this->ClearComponentSelection();
+    
+    FWorldContext& WorldContext = CreateNewWorldContext(EWorldType::SimulationViewer);
+    SimulationViewerWorld = Cast<UWorld>(PhysicsViewerWorld->Duplicate(this));
+    
+    WorldContext.SetCurrentWorld(SimulationViewerWorld);
+    ActiveWorld = SimulationViewerWorld;
+    SimulationViewerWorld->WorldType = EWorldType::SimulationViewer;
+
+    SimulationViewerWorld->BeginPlay();
+}
+
 void UEditorEngine::StartSkeletalMeshViewer(FName SkeletalMeshName, UAnimationAsset* AnimAsset)
 {
     if (SkeletalMeshName == "")
@@ -254,6 +276,8 @@ void UEditorEngine::StartSkeletalMeshViewer(FName SkeletalMeshName, UAnimationAs
         Player->SetCoordMode(ECoordMode::CDM_LOCAL);
     }
 }
+
+
 
 void UEditorEngine::StartPhysicsViewer(FName SkeletalMeshName)
 {
@@ -446,6 +470,23 @@ void UEditorEngine::EndPIE()
     ActiveWorld = EditorWorld;
 }
 
+void UEditorEngine::EndSimulationViewer()
+{
+    if (SimulationViewerWorld)
+    {
+        this->ClearActorSelection();
+        WorldList.Remove(GetWorldContextFromWorld(SimulationViewerWorld));
+        SimulationViewerWorld->Release();
+        GUObjectArray.MarkRemoveObject(SimulationViewerWorld);
+        SimulationViewerWorld = nullptr;
+
+        ClearActorSelection();
+        ClearComponentSelection();
+    }
+    ActiveWorld = EditorWorld;
+}
+
+
 void UEditorEngine::EndSkeletalMeshViewer()
 {
     if (SkeletalMeshViewerWorld)
@@ -470,6 +511,7 @@ void UEditorEngine::EndSkeletalMeshViewer()
         Player->SetCoordMode(ECoordMode::CDM_WORLD);
     }
 }
+
 
 void UEditorEngine::EndPhysicsViewer()
 {

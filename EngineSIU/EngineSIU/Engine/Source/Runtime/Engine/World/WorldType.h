@@ -12,6 +12,7 @@ enum class EWorldType
     SkeletalViewer,
     ParticleViewer,
     PhysicsViewer,
+    SimulationViewer,
     Inactive
 };
 
