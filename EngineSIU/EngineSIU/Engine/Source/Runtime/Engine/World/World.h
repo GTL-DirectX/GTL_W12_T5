@@ -24,6 +24,8 @@ class FCollisionManager;
 class AGameMode;
 class UTextComponent;
 
+class PxScene;
+
 class UWorld : public UObject
 {
     DECLARE_CLASS(UWorld, UObject)
@@ -106,6 +108,13 @@ private:
     UTextComponent* MainTextComponent = nullptr;
 
     FCollisionManager* CollisionManager = nullptr;
+
+public:
+    PxScene* GetPhysicsScene() const { return PhysicsScene; }
+    
+private:
+    PxScene* PhysicsScene;
+    
 };
 
 

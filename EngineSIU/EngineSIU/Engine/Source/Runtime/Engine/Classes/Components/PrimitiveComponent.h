@@ -2,6 +2,7 @@
 #include "Components/SceneComponent.h"
 #include "Engine/OverlapInfo.h"
 
+
 DECLARE_MULTICAST_DELEGATE_FiveParams(FComponentHitSignature, UPrimitiveComponent* /* HitComponent */, AActor* /* OtherActor */, UPrimitiveComponent* /* OtherComp */, FVector /* NormalImpulse */, const FHitResult& /* Hit */);
 DECLARE_MULTICAST_DELEGATE_SixParams(FComponentBeginOverlapSignature, UPrimitiveComponent* /* OverlappedComponent */, AActor* /* OtherActor */, UPrimitiveComponent* /* OtherComp */, int32 /* OtherBodyIndex */, bool /* bFromSweep */, const FHitResult& /* Hit */);
 DECLARE_MULTICAST_DELEGATE_FourParams(FComponentEndOverlapSignature, UPrimitiveComponent* /* OverlappedComponent */, AActor* /* OtherActor */, UPrimitiveComponent* /* OtherComp */, int32 /* OtherBodyIndex */);
@@ -134,4 +135,8 @@ struct FPredicateOverlapHasDifferentActor
 
 private:
     const AActor* const MyOwnerPtr;
+
+public:
+    UPROPERTY(EditAnywhere, FBodyInstance, BodyInstance, = {})
+    
 };

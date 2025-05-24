@@ -16,6 +16,9 @@
 #include "GameFramework/GameMode.h"
 #include "Classes/Components/TextComponent.h"
 #include "Contents/Actors/Fish.h"
+#include "Engine/EditorEngine.h"
+
+#include "Physics/PhysicsAssetUtils.h"
 
 class UEditorEngine;
 
@@ -26,6 +29,7 @@ UWorld* UWorld::CreateWorld(UObject* InOuter, const EWorldType InWorldType, cons
     NewWorld->WorldType = InWorldType;
     NewWorld->InitializeNewWorld();
 
+    // Physics Scene 초기화.
     
     return NewWorld;
 }
