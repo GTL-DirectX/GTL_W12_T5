@@ -302,6 +302,36 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
             GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->SetCameraSpeed(CameraSpeed);
         }
 
+        ImGui::Spacing();
+
+        ImGui::Text("Focal Length");
+        float FocalLength= GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocalLength;
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::DragFloat("##FocalLength", &FocalLength, 1.f, 4.f, 1000.0f, "%.1f"))
+        {
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocalLength = FocalLength;
+        }
+
+        ImGui::Spacing();
+
+        ImGui::Text("Aperture");
+        float Aperture = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->Aperture;
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::DragFloat("##Aperture", &Aperture, 0.1f, 1.0f, 22.0f, "%.1f"))
+        {
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->Aperture = Aperture;
+        }
+
+        ImGui::Spacing();
+
+        ImGui::Text("Focus Distance");
+        float FocusDistance = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocusDistance;
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::DragFloat("##FocusDistance", &FocusDistance, 1.0f, 1.0f, 10000.0f, "%.1f"))
+        {
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocusDistance = FocusDistance;
+        }
+
         ImGui::Separator();
 
         ImGui::Text("Gamma");

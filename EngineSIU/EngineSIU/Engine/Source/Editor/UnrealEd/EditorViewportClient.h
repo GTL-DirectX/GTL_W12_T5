@@ -119,6 +119,11 @@ protected:
     void GetViewInfo(FMinimalViewInfo& OutViewInfo) const;
 
 public:
+    float FocalLength = 100.0f; // 카메라의 초점 거리
+    float Aperture = 1.0f; // 카메라의 조리개 값
+    float FocusDistance = 1000.0f; // 카메라의 초점 거리
+
+public:
     FViewport* Viewport;
     int32 ViewportIndex;
     FViewport* GetViewport() const { return Viewport; }
