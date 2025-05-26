@@ -144,6 +144,9 @@ void FRenderer::CreateConstantBuffers()
     UINT CPUSkinningBufferSize = sizeof(FCPUSkinningConstants);
     BufferManager->CreateBufferGeneric<FCPUSkinningConstants>("FCPUSkinningConstants", nullptr, CPUSkinningBufferSize, D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 
+    UINT CameraDoFBufferSize = sizeof(FCameraDoFConstants);
+    BufferManager->CreateBufferGeneric<FCameraDoFConstants>("FCameraDoFConstants", nullptr, CameraDoFBufferSize, D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+
     BufferManager->CreateStructuredBufferGeneric<FMatrix>("BoneBuffer", nullptr, MaxBoneNum, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 
     BufferManager->CreateStructuredBufferGeneric<FParticleSpriteVertex>("ParticleSpriteInstanceBuffer", nullptr, MaxParticleInstanceNum, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
