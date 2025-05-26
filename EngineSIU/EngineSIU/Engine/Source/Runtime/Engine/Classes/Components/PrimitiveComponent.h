@@ -1,6 +1,7 @@
 #pragma once
 #include "Components/SceneComponent.h"
 #include "Engine/OverlapInfo.h"
+#include "Physics/BodyInstance.h"
 
 
 DECLARE_MULTICAST_DELEGATE_FiveParams(FComponentHitSignature, UPrimitiveComponent* /* HitComponent */, AActor* /* OtherActor */, UPrimitiveComponent* /* OtherComp */, FVector /* NormalImpulse */, const FHitResult& /* Hit */);
@@ -137,6 +138,6 @@ private:
     const AActor* const MyOwnerPtr;
 
 public:
-    UPROPERTY(EditAnywhere, FBodyInstance, BodyInstance, = {})
+    FBodyInstance BodyInstance;
     
 };

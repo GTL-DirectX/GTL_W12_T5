@@ -24,7 +24,10 @@ class FCollisionManager;
 class AGameMode;
 class UTextComponent;
 
-class PxScene;
+namespace physx
+{
+    class PxScene;
+}
 
 class UWorld : public UObject
 {
@@ -110,10 +113,10 @@ private:
     FCollisionManager* CollisionManager = nullptr;
 
 public:
-    PxScene* GetPhysicsScene() const { return PhysicsScene; }
+    physx::PxScene* GetPhysicsScene() const { return PhysicsScene; }
     
 private:
-    PxScene* PhysicsScene;
+    physx::PxScene* PhysicsScene;
     
 };
 

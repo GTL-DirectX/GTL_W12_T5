@@ -54,7 +54,7 @@ public:
         접촉 계산 시 오프셋 거리.
         충돌 검출 시 두 충돌 사이 약간의 여유 간격을 두어 충돌 감지를 부드럽게 만들기 위한 변수.
      */
-    UPROPERTY(EditAnywhere, float, RestOffset)
+    UPROPERTY(EditAnywhere, float, RestOffset, = 0.0f)
 
 private:
     // 사용자 지정 이름.
@@ -63,7 +63,7 @@ private:
     EAggCollisionShape::Type ShapeType;
 
     // 질량 계산에 기여하는지 여부.
-    UPROPERTY(EditAnywhere, bool, bContributeToMass)
+    UPROPERTY(EditAnywhere, bool, bContributeToMass, = true);
 
     ECollisionEnabled::Type CollisionEnabled;
     

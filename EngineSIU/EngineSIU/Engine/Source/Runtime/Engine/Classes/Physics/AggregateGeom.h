@@ -1,5 +1,8 @@
 #pragma once
-
+#include "BoxElem.h"
+#include "ConvexElem.h"
+#include "SphereElem.h"
+#include "SphylElem.h"
 
 struct FKAggregateGeom
 {

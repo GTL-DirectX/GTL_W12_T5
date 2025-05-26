@@ -17,8 +17,7 @@
 #include "Classes/Components/TextComponent.h"
 #include "Contents/Actors/Fish.h"
 #include "Engine/EditorEngine.h"
-
-#include "Physics/PhysicsAssetUtils.h"
+#include "Physics/PhysXManager.h"
 
 class UEditorEngine;
 
@@ -38,6 +37,7 @@ void UWorld::InitializeNewWorld()
 {
     ActiveLevel = FObjectFactory::ConstructObject<ULevel>(this);
     ActiveLevel->InitLevel(this);
+    PhysicsScene = FPhysXManager::Get().CreateScene();
     //InitializeLightScene(); // 테스트용 LightScene 비활성화
 
     CollisionManager = new FCollisionManager();
@@ -127,6 +127,12 @@ void UWorld::Tick(float DeltaTime)
             Actor->BeginPlay();
         }
         PendingBeginPlayActors.Empty();
+    }
+
+    if (PhysicsScene)
+    {
+        PhysicsScene->simulate(DeltaTime);
+        PhysicsScene->fetchResults(true);
     }
 }
 

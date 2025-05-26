@@ -1,9 +1,22 @@
 ﻿#pragma once
 
+#include "BodySetup.h"
 #include "UObject/Object.h"
 #include "UObject/ObjectMacros.h"
 
+#include "Container/Array.h"
+
 class UBodySetup;
+class UPhysicsConstraintTemplate;
+
+class USkeletalBodySetup : public UBodySetup
+{
+    DECLARE_CLASS(USkeletalBodySetup, UBodySetup)
+
+public:
+    USkeletalBodySetup() = default;
+    
+};
 
 class UPhysicsAsset : public UObject
 {
@@ -12,8 +25,8 @@ class UPhysicsAsset : public UObject
 public:
     UPhysicsAsset();
 
-
-private:
-    TArray<UBodySetup*> BodySetups;
+public:
+    TArray<USkeletalBodySetup*> SkeletalBodySetups;
+    TArray<UPhysicsConstraintTemplate*> ConstraintTemplates;
     
 };

@@ -5,6 +5,7 @@
 
 #include "AggregateGeom.h"
 
+class UPhysicalMaterial;
 // Skeletal Mesh 본에 매핑되는 물리 본체 구성에 사용.
 // 물리 본체는 물리 시뮬레이션을 위해 사용되는 물리적 본체를 정의.
 // 각 본마다 하나의 UBodySetup이 존재.
@@ -13,20 +14,30 @@ class UBodySetupCore : public UObject
     DECLARE_CLASS(UBodySetupCore, UObject)
 
 public:
+    UBodySetupCore() = default;
     // ECollisionTraceFlag CollisionTraceFlag;
 
     FName BoneName;
-
-    
     
 };
 
 class UBodySetup : public UBodySetupCore
 {
     DECLARE_CLASS(UBodySetup, UBodySetupCore)
-    
+
 public:
+    UBodySetup() = default;
+
+    const FKAggregateGeom& GetAggGeom() const { return AggGeom; }
+
+    UPhysicalMaterial* PhysicalMaterial;
+
+    float MassInKg = 0.0f;
+    bool bGenerateMirroredCollision = false;
+
+    float CalculateMass() const;
     
-    struct FKAggregateGeom AggGeom;
+private:
+    FKAggregateGeom AggGeom;
     
 };

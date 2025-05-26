@@ -51,6 +51,7 @@ enum class EPropertyType : uint8
     Object,                        // UObject* 타입
 
     Material,                      // UMaterial
+    
 };
 
 template <typename T>
