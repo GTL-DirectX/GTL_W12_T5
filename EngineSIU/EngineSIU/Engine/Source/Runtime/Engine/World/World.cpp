@@ -121,6 +121,12 @@ void UWorld::Tick(float DeltaTime)
 {
     TimeSeconds += DeltaTime;
     
+    if (PhysicsScene)
+    {
+        PhysicsScene->simulate(DeltaTime);
+        PhysicsScene->fetchResults(true);
+    }
+    
     // SpawnActor()에 의해 Actor가 생성된 경우, 여기서 BeginPlay 호출
     if (WorldType != EWorldType::Editor)
     {
@@ -131,11 +137,6 @@ void UWorld::Tick(float DeltaTime)
         PendingBeginPlayActors.Empty();
     }
 
-    if (PhysicsScene)
-    {
-        PhysicsScene->simulate(DeltaTime);
-        PhysicsScene->fetchResults(true);
-    }
 }
 
 void UWorld::BeginPlay()

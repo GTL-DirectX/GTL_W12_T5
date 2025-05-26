@@ -74,3 +74,16 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
     // PxScene = Scene;
     bInitialized = true;
 }
+
+void FBodyInstance::UpdateComponentTransform(class UPrimitiveComponent* Owner, float DeltaTime)
+{
+    if (!PxRigidActor)
+    {
+        return;
+    }
+
+    const PxTransform PxTM = PxRigidActor->getGlobalPose();
+    const FTransform WorldTM = FromPxTransform(PxTM);
+    Owner->SetWorldTransform(WorldTM);
+    
+}

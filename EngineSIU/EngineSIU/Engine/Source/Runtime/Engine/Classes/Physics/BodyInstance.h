@@ -53,6 +53,8 @@ struct FBodyInstance : public FBodyInstanceCore
     // Body 생성
     void InitBody(PxScene* Scene, class UPrimitiveComponent* Owner);
 
+    void UpdateComponentTransform(class UPrimitiveComponent* Owner, float DeltaTime);
+
     // 힘/속도/토크 API
     void AddForce(const FVector& Force);
     void AddTorque(const FVector& Torque);

@@ -123,6 +123,10 @@ public:
 
 public:
     FBodyInstance BodyInstance;
+
+protected:
+    void SyncPhysics(float DeltaTime);
+    
 };
 
 
