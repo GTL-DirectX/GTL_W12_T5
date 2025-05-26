@@ -78,8 +78,10 @@ void FDepthOfFieldPass::CleanUpRender(const std::shared_ptr<FEditorViewportClien
 {
     Graphics->DeviceContext->OMSetDepthStencilState(Graphics->DepthStencilState_Default, 1);
     Graphics->DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
-    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_SceneDepth), 1, nullptr);
-    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, nullptr);
+
+    ID3D11ShaderResourceView* NullSRV[1] = { nullptr };
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_SceneDepth), 1, NullSRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, NullSRV);
 }
 
 void FDepthOfFieldPass::UpdateDoFConstant(const std::shared_ptr<FEditorViewportClient>& Viewport)
