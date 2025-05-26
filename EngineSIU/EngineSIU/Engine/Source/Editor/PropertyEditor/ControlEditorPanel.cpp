@@ -332,6 +332,16 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
             GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocusDistance = FocusDistance;
         }
 
+        ImGui::Spacing();
+
+        ImGui::Text("Max CoC");
+        float MaxCoC = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->MaxCoC;
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::DragFloat("##MaxCoC", &MaxCoC, 1.0f, 1.0f, 100.0f, "%.1f"))
+        {
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->MaxCoC = MaxCoC;
+        }
+
         ImGui::Separator();
 
         ImGui::Text("Gamma");

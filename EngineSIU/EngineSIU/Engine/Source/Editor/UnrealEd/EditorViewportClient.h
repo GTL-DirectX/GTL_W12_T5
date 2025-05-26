@@ -122,7 +122,7 @@ public:
     float FocalLength = 100.0f; // 카메라의 초점 거리
     float Aperture = 1.0f; // 카메라의 조리개 값
     float FocusDistance = 1000.0f; // 카메라의 초점 거리
-
+    float MaxCoC = 4.0f; // 최대 CoC (Circle of Confusion) 값
 public:
     FViewport* Viewport;
     int32 ViewportIndex;
