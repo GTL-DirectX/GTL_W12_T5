@@ -567,5 +567,5 @@ struct FCameraDoFConstants
     float MaxCoC; // 최대 COC (Circle of Confusion)
     FVector2D ScreenSize; // 화면 크기
     float Padding1; // 정렬용 패딩
-    float Padding2
+    float Padding2;
 };

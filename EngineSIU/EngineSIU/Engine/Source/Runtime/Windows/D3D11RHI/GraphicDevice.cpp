@@ -410,7 +410,7 @@ void FGraphicsDevice::CreateSamplerState()
     samplerDesc.MinLOD = 0;
     samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-    HRESULT hr = Device->CreateSamplerState(&samplerDesc, &SamplerState_LinearClamp);
+    hr = Device->CreateSamplerState(&samplerDesc, &SamplerState_LinearClamp);
     if (FAILED(hr)) {
         MessageBox(nullptr, L"SamplerState 생성에 실패했습니다!", L"Error", MB_ICONERROR | MB_OK);
     }
