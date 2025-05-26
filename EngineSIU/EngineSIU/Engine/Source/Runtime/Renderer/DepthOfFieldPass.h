@@ -1,5 +1,10 @@
 #pragma once
 #include "RenderPassBase.h"
+
+class ID3D11VertexShader;
+class ID3D11PixelShader;
+class ID3D11SamplerState;
+
 class FDepthOfFieldPass : public FRenderPassBase
 {
 public:
@@ -14,7 +19,12 @@ protected:
     virtual void PrepareRender(const std::shared_ptr<FEditorViewportClient>& Viewport) override;
     virtual void CleanUpRender(const std::shared_ptr<FEditorViewportClient>& Viewport) override;
 private:
-    FWString VertexShaderKey = L"DepthOfFieldVertexShader";
-    FWString PixelShaderKey = L"DepthOfFieldPixelShader";
+    FWString ShaderKey = L"DepthOfFieldShader";
+    FString DoFConstantBufferKey = "FCameraDoFConstants";
+    ID3D11VertexShader* VertexShader = nullptr;
+    ID3D11PixelShader* PixelShader = nullptr;
+    ID3D11SamplerState* Sampler = nullptr;
+private:
+    void UpdateDoFConstant(const std::shared_ptr<FEditorViewportClient>& Viewport);
 };
 
