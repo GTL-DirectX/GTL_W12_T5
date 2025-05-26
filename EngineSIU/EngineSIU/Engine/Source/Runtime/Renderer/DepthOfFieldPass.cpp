@@ -35,10 +35,6 @@ void FDepthOfFieldPass::ClearRenderArr()
 
 void FDepthOfFieldPass::Render(const std::shared_ptr<FEditorViewportClient>& Viewport)
 {
-    const uint64 ShowFlag = Viewport->GetShowFlag();
-    if (!(ShowFlag & EEngineShowFlags::SF_DepthOfField))
-        return;
-
     PrepareRender(Viewport);
 
     UpdateDoFConstant(Viewport);
