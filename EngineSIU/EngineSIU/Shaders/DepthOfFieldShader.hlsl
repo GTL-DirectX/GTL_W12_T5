@@ -1,10 +1,10 @@
 #include "ShaderRegisters.hlsl"
 
-Texture2D SceneDepthTexture : register(t0); // 깊이 맵 텍스처
-Texture2D SceneColorTexture : register(t1); // 씬 텍스처
+Texture2D SceneDepthTexture : register(t99); // 깊이 맵 텍스처
+Texture2D SceneColorTexture : register(t100); // 씬 텍스처
 SamplerState LinearSampler : register(s0); // 샘플러 상태
 
-cbuffer CameraLensConstants : register(b0)
+cbuffer CameraDoFConstants : register(b0)
 {
     float FocalLength; // 초점 거리
     float Aperture; // 조리개 값
