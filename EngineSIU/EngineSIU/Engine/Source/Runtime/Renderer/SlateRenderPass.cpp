@@ -60,12 +60,12 @@ void FSlateRenderPass::Render(const std::shared_ptr<FEditorViewportClient>& View
     {
 
         Transform.Scale = FVector2D(
-            Rect.Width / ClientWidthFloat,
-            Rect.Height / ClientHeightFloat
+            1.0f,
+            1.0f
         );
         Transform.Offset = FVector2D(
-            (Rect.TopLeftX + Rect.Width * 0.5f) / ClientWidthFloat * 2.0f - 1.0f,
-            1.0f - (Rect.TopLeftY + Rect.Height * 0.5f) / ClientHeightFloat * 2.0f
+            0.0f,
+            0.0f
         );
     }
     else

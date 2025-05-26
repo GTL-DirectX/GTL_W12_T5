@@ -25,8 +25,14 @@ class UPhysicsAsset : public UObject
 public:
     UPhysicsAsset();
 
+    void UpdateBodySetupIndexMap();
+
+
 public:
     TArray<USkeletalBodySetup*> SkeletalBodySetups;
     TArray<UPhysicsConstraintTemplate*> ConstraintTemplates;
-    
+
+    /** This caches the BodySetup Index by BodyName to speed up FindBodyIndex */
+    TMap<FName, int32>					BodySetupIndexMap;
+
 };
