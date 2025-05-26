@@ -13,6 +13,7 @@ public:
 
     virtual UObject* Duplicate(UObject* InOuter) override;
 
+    virtual void BeginPlay() override;
 
     virtual void GetProperties(TMap<FString, FString>& OutProperties) const override;
 
@@ -26,6 +27,8 @@ public:
     virtual uint32 GetMaterialIndex(FName MaterialSlotName) const override;
     virtual TArray<FName> GetMaterialSlotNames() const override;
     virtual void GetUsedMaterials(TArray<UMaterial*>& Out) const override;
+
+    virtual class UBodySetup* GetBodySetup() const override;
 
     virtual int CheckRayIntersection(const FVector& InRayOrigin, const FVector& InRayDirection, float& OutHitDistance) const override;
     
@@ -48,4 +51,5 @@ public:
 protected:
     UStaticMesh* StaticMesh = nullptr;
     int SelectedSubMeshIndex = -1;
+    
 };

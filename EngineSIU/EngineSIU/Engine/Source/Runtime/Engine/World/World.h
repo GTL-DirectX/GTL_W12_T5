@@ -116,7 +116,7 @@ public:
     physx::PxScene* GetPhysicsScene() const { return PhysicsScene; }
     
 private:
-    physx::PxScene* PhysicsScene;
+    physx::PxScene* PhysicsScene = nullptr;
     
 };
 

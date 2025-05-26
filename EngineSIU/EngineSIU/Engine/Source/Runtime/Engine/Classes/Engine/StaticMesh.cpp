@@ -9,6 +9,7 @@ UObject* UStaticMesh::Duplicate(UObject* InOuter)
 {
     // TODO: Context->CopyResource를 사용해서 Buffer복사
     // ThisClass* NewComponent = Cast<ThisClass>(Super::Duplicate());
+    
     return nullptr;
 }
 

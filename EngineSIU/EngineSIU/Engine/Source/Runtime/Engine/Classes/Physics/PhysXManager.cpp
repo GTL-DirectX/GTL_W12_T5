@@ -1,4 +1,4 @@
-﻿#include "PhysXManager.h"
+#include "PhysXManager.h"
 
 #include "UserInterface/Console.h"
 
@@ -30,7 +30,11 @@ void FPhysXManager::InitPhysX()
     Scale.length = 1.0f;       // 1 unit = 1 cm
     Scale.speed = 980.0f;      // 1g ≈ 980 cm/s²
 
-    Physics = PxCreatePhysics(PX_PHYSICS_VERSION, *Foundation, Scale, true, nullptr);
+    PvdInstance = PxCreatePvd(*Foundation);
+    Transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10);
+    PvdInstance->connect(*Transport, PxPvdInstrumentationFlag::eALL);
+
+    Physics = PxCreatePhysics(PX_PHYSICS_VERSION, *Foundation, Scale, true, PvdInstance);
     if (!Physics)
     {
         UE_LOG(ELogLevel::Error, TEXT("Failed to create PxPhysics!"));
@@ -82,6 +86,7 @@ void FPhysXManager::ShutdonwPhysX()
         Cooking->release();
         Cooking = nullptr;
     }
+    
     if (Physics)
     {
         Physics->release();
@@ -109,5 +114,22 @@ PxScene* FPhysXManager::CreateScene()
         return nullptr;
     }
 
+    PxPvdSceneClient* PvdClient = NewScene->getScenePvdClient();
+    if (PvdClient)
+    {
+        PvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS, true);
+        PvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
+        PvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
+    }
+
     return NewScene;
+}
+
+void FPhysXManager::DestroyScene(PxScene* Scene)
+{
+    if (Scene)
+    {
+        Scene->release();
+        Scene = nullptr;
+    }
 }

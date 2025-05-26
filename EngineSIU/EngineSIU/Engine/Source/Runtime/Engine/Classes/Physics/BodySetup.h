@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "UObject/Object.h"
 #include "UObject/ObjectMacros.h"
@@ -30,12 +30,13 @@ public:
 
     const FKAggregateGeom& GetAggGeom() const { return AggGeom; }
 
-    UPhysicalMaterial* PhysicalMaterial;
+    // TODO: 테스트용 하드코딩 함수. 제거할 것.
+    void AddBoxElem(const FKBoxElem& BoxElem) { AggGeom.BoxElems.Add(BoxElem); }
+
+    UPhysicalMaterial* PhysicalMaterial = nullptr;
 
     float MassInKg = 0.0f;
     bool bGenerateMirroredCollision = false;
-
-    float CalculateMass() const;
     
 private:
     FKAggregateGeom AggGeom;

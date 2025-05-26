@@ -8,6 +8,9 @@
 #include "UObject/ObjectFactory.h"
 
 #include "GameFramework/Actor.h"
+#include "Physics/BodySetup.h"
+#include "Physics/BodyInstance.h"
+#include "World/World.h"
 
 UObject* UStaticMeshComponent::Duplicate(UObject* InOuter)
 {
@@ -17,6 +20,27 @@ UObject* UStaticMeshComponent::Duplicate(UObject* InOuter)
     NewComponent->SelectedSubMeshIndex = SelectedSubMeshIndex;
 
     return NewComponent;
+}
+
+void UStaticMeshComponent::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (UStaticMesh* Mesh = GetStaticMesh())
+    {
+        // TODO: Test Setup 생성. 추후 Load 시 StaticMesh에 BodySetup이 없으면 생성하도록 변경
+        if (Mesh->GetBodySetup() == nullptr)
+        {
+            Mesh->SetBodySetup(FObjectFactory::ConstructObject<UBodySetup>(this));
+            Mesh->GetBodySetup()->AddBoxElem(FKBoxElem(50.0f, 50.0f, 50.0f));
+        }
+        
+        if (UBodySetup* BodySetup = GetBodySetup())
+        {
+            BodyInstance.BodySetup = Mesh->GetBodySetup();
+            BodyInstance.InitBody(GetWorld()->GetPhysicsScene(), this);
+        }
+    }
 }
 
 void UStaticMeshComponent::GetProperties(TMap<FString, FString>& OutProperties) const
@@ -144,6 +168,15 @@ void UStaticMeshComponent::GetUsedMaterials(TArray<UMaterial*>& Out) const
             Out[MaterialIndex] = OverrideMaterials[MaterialIndex];
         }
     }
+}
+
+class UBodySetup* UStaticMeshComponent::GetBodySetup() const
+{
+    if (GetStaticMesh())
+    {
+        return GetStaticMesh()->GetBodySetup();
+    }
+    return nullptr;
 }
 
 int UStaticMeshComponent::CheckRayIntersection(const FVector& InRayOrigin, const FVector& InRayDirection, float& OutHitDistance) const

@@ -111,6 +111,8 @@ UObject* UWorld::Duplicate(UObject* InOuter)
     NewWorld->ActiveLevel->InitLevel(NewWorld);
     
     NewWorld->CollisionManager = new FCollisionManager();
+
+    NewWorld->PhysicsScene = FPhysXManager::Get().CreateScene();
     
     return NewWorld;
 }
@@ -222,6 +224,12 @@ void UWorld::Release()
     {
         delete CollisionManager;
         CollisionManager = nullptr;
+    }
+
+    if (PhysicsScene)
+    {
+        FPhysXManager::Get().DestroyScene(PhysicsScene);
+        PhysicsScene = nullptr;
     }
     
     GUObjectArray.ProcessPendingDestroyObjects();

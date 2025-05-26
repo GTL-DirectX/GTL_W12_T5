@@ -31,7 +31,7 @@ inline PxQuat ToPxQuat(const FQuat& Quat)
     return PxQuat(Quat.X, Quat.Y, Quat.Z, Quat.W);
 }
 
-PxTransform ToPxTransform(const FTransform& Transform)
+inline PxTransform ToPxTransform(const FTransform& Transform)
 {
     return PxTransform(
         ToPxVec3(Transform.GetTranslation()),
