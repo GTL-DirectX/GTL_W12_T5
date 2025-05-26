@@ -4,6 +4,7 @@
 #include "PropertyEditor/ControlEditorPanel.h"
 #include "PropertyEditor/OutlinerEditorPanel.h"
 #include "PropertyEditor/ParticleViewerPanel.h"
+#include "PropertyEditor/PhysicsAssetEditorPanel.h"
 #include "PropertyEditor/PropertyEditorPanel.h"
 #include "PropertyEditor/SkeletalMeshViewerPanel.h"
 #include "World/World.h"
@@ -24,6 +25,9 @@ void UnrealEd::Initialize()
     
     auto ParticleViewPanel = std::make_shared<ParticleViewerPanel>();
     Panels["ParticleViewerPanel"] = ParticleViewPanel;
+
+    auto PhysicsAssetPanel = std::make_shared<PhysicsAssetEditorPanel>();
+    Panels["PhysicsAssetEditorPanel"] = PhysicsAssetPanel;
 }
 
 void UnrealEd::Render() const
@@ -57,6 +61,9 @@ void UnrealEd::Render() const
         break;
     case EWorldType::Inactive:
         currentMask = EWorldTypeBitFlag::Inactive;
+        break;
+    case EWorldType::PhysicsViewer:
+        currentMask = EWorldTypeBitFlag::PhysicsViewer;
         break;
     default:
         currentMask = EWorldTypeBitFlag::None;

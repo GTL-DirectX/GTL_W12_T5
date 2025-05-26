@@ -18,7 +18,7 @@
 #include "PropertyEditor/ParticleViewerPanel.h"
 #include "UnrealEd/UnrealEd.h"
 #include "World/ParticleViewerWorld.h"
-#include "World/SimulationViewrWorld.h"
+#include "World/SimulationViewerWorld.h"
 
 extern FEngineLoop GEngineLoop;
 
