@@ -6,6 +6,8 @@
 
 struct FStaticMeshRenderData;
 
+class UBodySetup;
+
 class UStaticMesh : public UObject
 {
     DECLARE_CLASS(UStaticMesh, UObject)
@@ -30,4 +32,12 @@ public:
 private:
     FStaticMeshRenderData* RenderData = nullptr;
     TArray<FStaticMaterial*> Materials;
+
+public:
+    UBodySetup* GetBodySetup() const { return BodySetup; }
+    void SetBodySetup(UBodySetup* InBodySetup) { BodySetup = InBodySetup; }
+    // static FName GetBodySetupName() { return BodySetup; }
+
+private:
+    UPROPERTY(EditAnywhere, UBodySetup*, BodySetup, = nullptr)
 };

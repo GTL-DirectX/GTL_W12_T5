@@ -16,6 +16,8 @@
 #include "GameFramework/GameMode.h"
 #include "Classes/Components/TextComponent.h"
 #include "Contents/Actors/Fish.h"
+#include "Engine/EditorEngine.h"
+#include "Physics/PhysXManager.h"
 
 class UEditorEngine;
 
@@ -26,6 +28,7 @@ UWorld* UWorld::CreateWorld(UObject* InOuter, const EWorldType InWorldType, cons
     NewWorld->WorldType = InWorldType;
     NewWorld->InitializeNewWorld();
 
+    // Physics Scene 초기화.
     
     return NewWorld;
 }
@@ -34,6 +37,7 @@ void UWorld::InitializeNewWorld()
 {
     ActiveLevel = FObjectFactory::ConstructObject<ULevel>(this);
     ActiveLevel->InitLevel(this);
+    PhysicsScene = FPhysXManager::Get().CreateScene();
     //InitializeLightScene(); // 테스트용 LightScene 비활성화
 
     CollisionManager = new FCollisionManager();
@@ -123,6 +127,12 @@ void UWorld::Tick(float DeltaTime)
             Actor->BeginPlay();
         }
         PendingBeginPlayActors.Empty();
+    }
+
+    if (PhysicsScene)
+    {
+        PhysicsScene->simulate(DeltaTime);
+        PhysicsScene->fetchResults(true);
     }
 }
 
