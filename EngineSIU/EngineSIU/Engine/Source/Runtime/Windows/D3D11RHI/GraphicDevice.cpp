@@ -27,6 +27,10 @@ ID3D11SamplerState* FGraphicsDevice::GetSamplerState(ESamplerType SamplerType) c
     {
         return SamplerState_PointWrap;
     }
+    else if (SamplerType == ESamplerType::LinearClamp)
+    {
+        return SamplerState_LinearClamp;
+    }
     return nullptr;
 }
 
@@ -394,6 +398,20 @@ void FGraphicsDevice::CreateSamplerState()
     hr = Device->CreateSamplerState(&SamplerDesc, &SamplerState_PointWrap);
     if (FAILED(hr))
     {
+        MessageBox(nullptr, L"SamplerState 생성에 실패했습니다!", L"Error", MB_ICONERROR | MB_OK);
+    }
+
+    D3D11_SAMPLER_DESC samplerDesc = {};
+    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR; // 선형 필터링
+    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;   // UV 범위 밖 샘플링 → Clamp
+    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    samplerDesc.MinLOD = 0;
+    samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+    HRESULT hr = Device->CreateSamplerState(&samplerDesc, &SamplerState_LinearClamp);
+    if (FAILED(hr)) {
         MessageBox(nullptr, L"SamplerState 생성에 실패했습니다!", L"Error", MB_ICONERROR | MB_OK);
     }
 }
