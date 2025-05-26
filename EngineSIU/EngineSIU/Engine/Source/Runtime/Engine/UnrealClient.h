@@ -26,6 +26,10 @@ enum class EResourceType : uint8
     ERT_Gizmo,
     ERT_Overlay,
     ERT_PostProcessCompositing,
+    ERT_DoF_CoC,
+    ERT_DoF_BlurNear,
+    ERT_DoF_BlurFar,
+    ERT_DoF_Result,
     ERT_DepthOfField,
     ERT_MAX,
 };
