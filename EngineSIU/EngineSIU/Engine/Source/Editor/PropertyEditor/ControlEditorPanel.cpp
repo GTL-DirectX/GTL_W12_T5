@@ -313,6 +313,56 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
 
         ImGui::Separator();
 
+        ImGui::Text("Focal Length");
+        float FocalLength= GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocalLength_mm;
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::DragFloat("##FocalLength", &FocalLength, 1.f, 4.f, 1000.0f, "%.1f"))
+        {
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocalLength_mm = FocalLength;
+        }
+
+        ImGui::Spacing();
+
+        ImGui::Text("F_Stop");
+        float F_Stop = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->F_Stop;
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::DragFloat("##F_Stop", &F_Stop, 0.1f, 1.0f, 22.0f, "%.1f"))
+        {
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->F_Stop = F_Stop;
+        }
+
+        ImGui::Spacing();
+
+        ImGui::Text("Focus Distance");
+        float FocusDistance = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocusDistance;
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::DragFloat("##FocusDistance", &FocusDistance, 1.0f, 1.0f, 10000.0f, "%.1f"))
+        {
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocusDistance = FocusDistance;
+        }
+
+        ImGui::Spacing();
+
+        ImGui::Text("SensorWidth");
+        float SensorWidth_mm = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->SensorWidth_mm;
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::DragFloat("##SensorWidth", &SensorWidth_mm, 1.0f, 1.0f, 100.0f, "%.1f"))
+        {
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->SensorWidth_mm = SensorWidth_mm;
+        }
+
+        ImGui::Spacing();
+
+        ImGui::Text("CoCScaleFactor");
+        float CoCScaleFactor = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->CoCScaleFactor;
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::DragFloat("##CoCScaleFactor", &CoCScaleFactor, 1.0f, 1.0f, 100.0f, "%.1f"))
+        {
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->CoCScaleFactor = CoCScaleFactor;
+        }
+
+        ImGui::Separator();
+
         ImGui::Text("Gamma");
         float Gamma = FEngineLoop::Renderer.CompositingPass->GammaValue;
         ImGui::SetNextItemWidth(120.0f);

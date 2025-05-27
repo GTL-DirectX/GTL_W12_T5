@@ -46,7 +46,7 @@ class FEditorRenderPass;
 class FDepthPrePass;
 class FTileLightCullingPass;
 class FGPUTimingManager;
-
+class FDepthOfFieldPass;
 class FRenderer
 {
 public:
@@ -119,7 +119,7 @@ public:
     FPostProcessCompositingPass* PostProcessCompositingPass = nullptr;
     
     FSlateRenderPass* SlateRenderPass = nullptr;
-
+    FDepthOfFieldPass* DepthOfFieldPass = nullptr;
 private:
     template <typename RenderPassType>
         requires std::derived_from<RenderPassType, IRenderPass>

@@ -17,6 +17,7 @@ enum class ESamplerType : uint8
 {
     Point,
     Linear,
+    LinearClamp,
 };
 
 class FGraphicsDevice
@@ -37,11 +38,13 @@ public:
 
     ID3D11DepthStencilState* DepthStencilState_Default = nullptr;
     ID3D11DepthStencilState* DepthStencilState_DepthWriteDisabled = nullptr;
+    ID3D11DepthStencilState* DepthStencilState_DepthTestDisabled = nullptr;
     
     ID3D11BlendState* BlendState_AlphaBlend = nullptr;
 
     ID3D11SamplerState* SamplerState_LinearWrap = nullptr;
     ID3D11SamplerState* SamplerState_PointWrap = nullptr;
+    ID3D11SamplerState* SamplerState_LinearClamp = nullptr;
     
     DXGI_SWAP_CHAIN_DESC SwapchainDesc;
     
