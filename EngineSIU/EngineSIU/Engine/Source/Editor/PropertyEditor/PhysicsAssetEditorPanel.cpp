@@ -68,7 +68,7 @@ void PhysicsAssetEditorPanel::Render()
         if (CurrentPhysicsAsset)
         {
             //스켈레탈 메쉬 이름으로 저장
-            UAssetManager::Get().SavePhysicsAssets(CurrentPhysicsAsset, SkeletalMeshComponent->GetSkeletalMeshAsset()->GetName());
+            UAssetManager::Get().SavePhysicsAssets(CurrentPhysicsAsset, CurrentPhysicsAsset->GetName());
         }
     }
     ImGui::End();

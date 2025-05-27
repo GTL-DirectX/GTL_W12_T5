@@ -104,7 +104,7 @@ public:
     void AddAnimation(const FName& Key, UAnimationAsset* Animation);
     void AddParticleSystem(const FName& Key, UParticleSystem* ParticleSystem);
     
-    void SavePhysicsAssets(UPhysicsAsset* PhysicsAsset, const FString& InAssetName);
+    void SavePhysicsAssets(UPhysicsAsset* PhysicsAsset, const FString& InAssetPath);
 
 
 private:

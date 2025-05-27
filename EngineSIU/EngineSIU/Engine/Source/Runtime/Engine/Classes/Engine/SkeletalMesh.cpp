@@ -31,11 +31,12 @@ void USkeletalMesh::SerializeAsset(FArchive& Ar)
 
 void USkeletalMesh::CreateOrBindPhysicsAsset()
 {
-    PhysicsAsset = UAssetManager::Get().GetPhysicsAsset(GetName() + TEXT("_PhysicsAsset"));
+    
+    PhysicsAsset = UAssetManager::Get().GetPhysicsAsset(RenderData->ObjectName + TEXT("_PhysicsAsset"));
 
     if (PhysicsAsset == nullptr)
     {
-        PhysicsAsset = FObjectFactory::ConstructObject<UPhysicsAsset>(this, GetName() + TEXT("_PhysicsAsset"));
+        PhysicsAsset = FObjectFactory::ConstructObject<UPhysicsAsset>(this, RenderData->ObjectName + TEXT("_PhysicsAsset"));
     }
 }
 

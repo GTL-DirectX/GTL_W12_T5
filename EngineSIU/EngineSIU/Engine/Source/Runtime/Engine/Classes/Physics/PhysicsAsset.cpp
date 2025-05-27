@@ -42,7 +42,7 @@ void UPhysicsAsset::SerializeAsset(FArchive& Ar)
                 FName Name = SkeletalBodySetups[i] ? SkeletalBodySetups[i]->GetFName() : NAME_None;
                 Ar << Name;
     
-                if (Name != NAME_None)
+                if (Name == NAME_None)
                 {
                     assert(false);
                 }

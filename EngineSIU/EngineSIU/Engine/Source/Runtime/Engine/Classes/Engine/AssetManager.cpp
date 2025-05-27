@@ -125,7 +125,7 @@ void UAssetManager::GetMaterialKeys(TArray<FName>& OutKeys) const
 
 void UAssetManager::AddAssetInfo(const FAssetInfo& Info)
 {
-    AssetRegistry->PathNameToAssetInfo.Add(Info.AssetName, Info);
+    AssetRegistry->PathNameToAssetInfo.Add(Info.SourceFilePath, Info);
 }
 
 void UAssetManager::AddSkeleton(const FName& Key, USkeleton* Skeleton)
@@ -293,13 +293,17 @@ void UAssetManager::HandleFBX(const FAssetInfo& AssetInfo)
     }
 }
 
-void UAssetManager::SavePhysicsAssets(UPhysicsAsset* PhysicsAsset, const FString& InAssetName)
+void UAssetManager::SavePhysicsAssets(UPhysicsAsset* PhysicsAsset, const FString& InAssetPath)
 {
     FAssetInfo AssetInfo = {};
-    AssetInfo.AssetName = FName(InAssetName + ".physbin");
-    AssetInfo.SourceFilePath = "Contents/Physics" + InAssetName + ".physbin"; 
-    AssetInfo.PackagePath = FName("Contents/Physics");
+    std::filesystem::path Entry(*InAssetPath);
+    
+    AssetInfo.SourceFilePath = Entry.generic_string() + ".physbin";
+    AssetInfo.PackagePath = FName(Entry.parent_path().generic_string());
     AssetInfo.AssetType = EAssetType::PhysicsAsset;
+    AssetInfo.AssetName = FName(Entry.filename().generic_string());
+
+    AddAssetInfo(AssetInfo);
 
     FString BaseName;
     FWString FilePath = AssetInfo.SourceFilePath.ToWideString();
@@ -322,6 +326,8 @@ void UAssetManager::SavePhysicsAssets(UPhysicsAsset* PhysicsAsset, const FString
     
     // 바이너리 작성
     SavePhysicsAssetBinary(FilePath, Result, BaseName, FolderPath);
+    
+    AddToAssetMap(Result, BaseName, AssetInfo);
 }
 
 
@@ -662,7 +668,7 @@ bool UAssetManager::SerializeAssetLoadResult(FArchive& Ar, FAssetLoadResult& Res
         PhysicsAssetNum = Result.PhysicsAssets.Num();
     }
 
-    Ar << MaterialNum << SkeletonNum << SkeletalMeshNum << StaticMeshNum << AnimationNum /* << PhysicsAssetNum */;
+    Ar << MaterialNum << SkeletonNum << SkeletalMeshNum << StaticMeshNum << AnimationNum  << PhysicsAssetNum ;
 
     // Load 과정에서 Key를 통해 오브젝트를 찾기 위한 맵
     TMap<FName, USkeleton*> TempSkeletonMap;
@@ -946,7 +952,7 @@ bool UAssetManager::SerializeAssetLoadResult(FArchive& Ar, FAssetLoadResult& Res
         FAssetInfo Info;
         if (Ar.IsSaving())
         {
-            FName Key = FolderPath / (i > 0 ? BaseName + FString::FromInt(i) : BaseName);
+            FName Key = FolderPath / (i > 0 ? BaseName + FString::FromInt(i) : BaseName) + ".physbin";
             if (AssetRegistry->PathNameToAssetInfo.Contains(Key))
             {
                 Info = AssetRegistry->PathNameToAssetInfo[Key];
