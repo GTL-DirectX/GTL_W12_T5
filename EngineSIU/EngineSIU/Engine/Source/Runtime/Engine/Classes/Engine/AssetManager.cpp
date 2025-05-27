@@ -98,6 +98,11 @@ UParticleSystem* UAssetManager::GetParticleSystem(const FName& Name) const
     return Cast<UParticleSystem>(GetAsset(EAssetType::ParticleSystem, Name));
 }
 
+UPhysicsAsset* UAssetManager::GetPhysicsAsset(const FName& Name) const
+{
+    return Cast<UPhysicsAsset>(GetAsset(EAssetType::PhysicsAsset, Name));
+}
+
 void UAssetManager::GetMaterialKeys(TSet<FName>& OutKeys) const
 {
     OutKeys.Empty();
@@ -197,13 +202,14 @@ void UAssetManager::LoadContentFiles()
             AssetInfo.AssetType = EAssetType::PhysicsAsset;
             AssetInfo.AssetName = FName(Entry.path().filename().generic_string());
 
-            HandlePhysicsAsset(AssetInfo, false);
+            LoadPhysicsAsset(AssetInfo);
         }
 
     }
 
     OutputDebugStringA(std::format("FBX Load Time: {:.2f} s\nBinary Load Time: {:.2f} s", FbxLoadTime / 1000.0, BinaryLoadTime / 1000.0).c_str());
 }
+
 
 void UAssetManager::HandleFBX(const FAssetInfo& AssetInfo)
 {
@@ -287,7 +293,39 @@ void UAssetManager::HandleFBX(const FAssetInfo& AssetInfo)
     }
 }
 
-void UAssetManager::HandlePhysicsAsset(const FAssetInfo& AssetInfo, bool bIsSave)
+void UAssetManager::SavePhysicsAssets(UPhysicsAsset* PhysicsAsset, const FString& InAssetName)
+{
+    FAssetInfo AssetInfo = {};
+    AssetInfo.AssetName = FName(InAssetName + ".physbin");
+    AssetInfo.SourceFilePath = "Contents/Physics" + InAssetName + ".physbin"; 
+    AssetInfo.PackagePath = FName("Contents/Physics");
+    AssetInfo.AssetType = EAssetType::PhysicsAsset;
+
+    FString BaseName;
+    FWString FilePath = AssetInfo.SourceFilePath.ToWideString();
+
+    FWString FolderPath = FilePath.substr(0, FilePath.find_last_of(L"\\/") + 1);
+    FWString FileName = FilePath.substr(FilePath.find_last_of(L"\\/") + 1);
+    size_t DotPos = FileName.find_last_of('.');
+    if (DotPos != std::string::npos)
+    {
+        BaseName = FileName.substr(0, DotPos);
+    }
+    else
+    {
+        BaseName = FileName;
+    }
+
+
+    FAssetLoadResult Result;
+    Result.PhysicsAssets.Add(PhysicsAsset);
+    
+    // 바이너리 작성
+    SavePhysicsAssetBinary(FilePath, Result, BaseName, FolderPath);
+}
+
+
+void UAssetManager::LoadPhysicsAsset(const FAssetInfo& AssetInfo)
 {
     // TODO : ControlEditorPanel Viwer Open과 코드 중복 다수
     // 경로, 이름 준비
@@ -312,32 +350,24 @@ void UAssetManager::HandlePhysicsAsset(const FAssetInfo& AssetInfo, bool bIsSave
     LARGE_INTEGER EndTime;
     
     FAssetLoadResult Result;
-        
-    if (bIsSave == false)
-    {
-        
-        
-        QueryPerformanceCounter(&StartTime);
-        
-        // bin 파일 읽기
-        LoadPhysicsAssetBinary(BinFilePath, Result, BaseName, FolderPath);
-        QueryPerformanceCounter(&EndTime);
-        
-        LARGE_INTEGER Frequency;
-        QueryPerformanceFrequency(&Frequency);
-        {
-            BinaryLoadTime += (static_cast<double>(EndTime.QuadPart - StartTime.QuadPart) * 1000.f / static_cast<double>(Frequency.QuadPart));
-        }
-        
-        // 로드된 에셋 등록
-        AddToAssetMap(Result, BaseName, AssetInfo);
-    }
 
-    if (!bIsSave)
-    {
-        // 바이너리 작성
-        SavePhysicsAssetBinary(BinFilePath, Result, BaseName, FolderPath);
-    }
+     QueryPerformanceCounter(&StartTime);
+     
+     // bin 파일 읽기
+     LoadPhysicsAssetBinary(BinFilePath, Result, BaseName, FolderPath);
+     QueryPerformanceCounter(&EndTime);
+     
+     LARGE_INTEGER Frequency;
+     QueryPerformanceFrequency(&Frequency);
+     {
+         BinaryLoadTime += (static_cast<double>(EndTime.QuadPart - StartTime.QuadPart) * 1000.f / static_cast<double>(Frequency.QuadPart));
+     }
+     
+     // 로드된 에셋 등록
+     AddToAssetMap(Result, BaseName, AssetInfo);
+    
+
+
 }
 
 void UAssetManager::AddToAssetMap(const FAssetLoadResult& Result, const FString& BaseName, const FAssetInfo& BaseAssetInfo)

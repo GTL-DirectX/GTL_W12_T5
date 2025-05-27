@@ -2,6 +2,10 @@
 #include "Asset/SkeletalMeshAsset.h"
 #include "SkeletalMesh.h"
 
+#include "AssetManager.h"
+#include "Physics/PhysicsAsset.h"
+#include "UObject/ObjectFactory.h"
+
 void USkeletalMesh::SetRenderData(std::unique_ptr<FSkeletalMeshRenderData> InRenderData)
 {
     RenderData = std::move(InRenderData);
@@ -23,6 +27,16 @@ void USkeletalMesh::SerializeAsset(FArchive& Ar)
     }
 
     RenderData->Serialize(Ar);
+}
+
+void USkeletalMesh::CreateOrBindPhysicsAsset()
+{
+    PhysicsAsset = UAssetManager::Get().GetPhysicsAsset(GetName() + TEXT("_PhysicsAsset"));
+
+    if (PhysicsAsset == nullptr)
+    {
+        PhysicsAsset = FObjectFactory::ConstructObject<UPhysicsAsset>(this, GetName() + TEXT("_PhysicsAsset"));
+    }
 }
 
 

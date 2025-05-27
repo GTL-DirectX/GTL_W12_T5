@@ -41,7 +41,10 @@ public:
 
     UPhysicalMaterial* PhysicalMaterial = nullptr;
 
-    float MassInKg = 0.0f;
+    UPROPERTY(
+    EditAnywhere, ({ .ToolTip = "DragDeltaSpeed 0.123f", .DragDeltaSpeed = 0.123f }),
+    float, MassInKg, = 0.0f;
+    )
     bool bGenerateMirroredCollision = false;
 
     float CalculateMass() const;

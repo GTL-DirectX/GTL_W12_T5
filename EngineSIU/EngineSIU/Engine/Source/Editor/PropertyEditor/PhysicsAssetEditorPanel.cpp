@@ -48,7 +48,6 @@ void PhysicsAssetEditorPanel::Render()
 
     if (CurrentPhysicsAsset)
     {
-        
         CurrentPhysicsAsset->UpdateBodySetupIndexMap();
     }
 
@@ -65,22 +64,11 @@ void PhysicsAssetEditorPanel::Render()
     ImGui::Begin("SaveAssetButton", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground);
     if (ImGui::Button("Save", ImVec2(-1, -1))) // -1은 사용 가능한 전체 너비/높이를 의미
     {
-        // if (CurrentPhysicsAsset)
-        // {
-        //     // 에셋 저장 로직 (UAssetManager 사용 예시)
-        //     // 실제 저장 경로나 방식은 엔진 구현에 따라 달라질 수 있습니다.
-        //     FString PackagePath = CurrentPhysicsAsset->GetPackagePath(); // 에셋의 패키지 경로 가져오기
-        //     if (!PackagePath.IsEmpty())
-        //     {
-        //         UAssetManager::Get().SaveAsset(CurrentPhysicsAsset, PackagePath);
-        //         UE_LOG(LogTemp, Log, TEXT("PhysicsAsset '%s' saved to '%s'"), *CurrentPhysicsAsset->GetName(), *PackagePath);
-        //     }
-        //     else
-        //     {
-        //         UE_LOG(LogTemp, Warning, TEXT("Could not save PhysicsAsset '%s': PackagePath is empty."), *CurrentPhysicsAsset->GetName());
-        //         // 필요하다면 "Save As" 다이얼로그 로직 추가
-        //     }
-        // }
+        if (CurrentPhysicsAsset)
+        {
+            //스켈레탈 메쉬 이름으로 저장
+            UAssetManager::Get().SavePhysicsAssets(CurrentPhysicsAsset, SkeletalMeshComponent->GetSkeletalMeshAsset()->GetName());
+        }
     }
     ImGui::End();
 
@@ -165,11 +153,21 @@ void PhysicsAssetEditorPanel::Render()
 void PhysicsAssetEditorPanel::SetSkeletalMesh(USkeletalMesh* InSkeletalMesh)
 {
     CurrentSkeletalMesh = InSkeletalMesh;
-    SetPhysicsAsset(CurrentSkeletalMesh ? CurrentSkeletalMesh->PhysicsAsset : nullptr);
+    if (!CurrentSkeletalMesh)
+    {
+        return;
+    }
+    
+    if (CurrentSkeletalMesh->PhysicsAsset == nullptr)
+    {
+        CurrentSkeletalMesh->CreateOrBindPhysicsAsset();
+    }
+    SetPhysicsAsset(CurrentSkeletalMesh->PhysicsAsset);
     
     SelectedBoneName = NAME_None;
-    USkeletalBodySetup* SelectedBodySetup = nullptr; // 선택된 BodySetup 객체
-    UPhysicsConstraintTemplate* SelectedConstraintTemplate = nullptr; // 선택된 ConstraintTemplate 객체
+    
+    SelectedBodySetup = nullptr; // 선택된 BodySetup 객체
+    SelectedConstraintTemplate = nullptr; // 선택된 ConstraintTemplate 객체
 }
 
 void PhysicsAssetEditorPanel::OnResize(HWND hWnd)
@@ -185,8 +183,8 @@ void PhysicsAssetEditorPanel::SetPhysicsAsset(UPhysicsAsset* InPhysicsAsset)
     CurrentPhysicsAsset = InPhysicsAsset;
     // 피직스 에셋이 변경되면 선택 정보 초기화
     SelectedBoneName = NAME_None;
-    USkeletalBodySetup* SelectedBodySetup = nullptr; // 선택된 BodySetup 객체
-    UPhysicsConstraintTemplate* SelectedConstraintTemplate = nullptr; // 선택된 ConstraintTemplate 객체
+    SelectedBodySetup = nullptr; // 선택된 BodySetup 객체
+    SelectedConstraintTemplate = nullptr; // 선택된 ConstraintTemplate 객체
 
     if (CurrentPhysicsAsset)
     {
@@ -202,16 +200,8 @@ void PhysicsAssetEditorPanel::RenderDetailsPanel()
         ImGui::SeparatorText(*FString::Printf(TEXT("Body Setup: %s"), *SelectedBodySetup->BoneName.ToString()));
         RenderObjectDetails(SelectedBodySetup);
 
-        // USkeletalBodySetup의 멤버인 UBodySetup의 프로퍼티도 표시하고 싶다면:
-        // UBodySetup* BaseBodySetup = Cast<UBodySetup>(SelectedBodySetup); // 이미 USkeletalBodySetup이 UBodySetup을 상속
-        // if (BaseBodySetup) {
-        //     ImGui::SeparatorText(*FString::Printf(TEXT("Base BodySetup Properties (%s)"), *BaseBodySetup->GetClass()->GetName()));
-        //     RenderObjectDetails(BaseBodySetup); // 이렇게 하면 중복될 수 있으니, RenderObjectDetails가 부모 클래스까지 처리하도록 하거나,
-        // 명시적으로 필요한 프로퍼티만 표시
-        // }
-
-        // FKAggregateGeom 같은 커스텀 구조체는 별도의 UI 렌더링 함수 필요
-        // 예: RenderAggregateGeomDetails(SelectedBodySetup->GetAggGeom());
+        // FKBoxElem Box = FKBoxElem();
+        // SelectedBodySetup->GetAggGeom().BoxElems.Add(Box); // 예시로 BoxElem 추가
     }
     else if (SelectedConstraintTemplate)
     {
@@ -234,10 +224,66 @@ void PhysicsAssetEditorPanel::RenderDetailsPanel()
     else if (SelectedBoneName != NAME_None)
     {
         ImGui::SeparatorText(*FString::Printf(TEXT("Bone: %s"), *SelectedBoneName.ToString()));
-        // 본 자체에 대한 정보 표시 (예: 트랜스폼, 스켈레탈 메시에서의 정보 등)
-        // 이 정보는 UObject가 아닐 수 있으므로 직접 ImGui 위젯 사용
-        ImGui::Text("Selected bone does not have direct editable properties here.");
-        ImGui::Text("Select an associated Body or Constraint to see details.");
+        
+        // 현재 선택된 본에 이미 BodySetup이 있는지 확인
+        bool bHasExistingBodySetup = false;
+        USkeletalBodySetup* ExistingBodySetup = nullptr;
+        if (CurrentPhysicsAsset)
+        {
+            for (USkeletalBodySetup* BodySetup : CurrentPhysicsAsset->SkeletalBodySetups)
+            {
+                if (BodySetup && BodySetup->BoneName == SelectedBoneName)
+                {
+                    bHasExistingBodySetup = true;
+                    ExistingBodySetup = BodySetup; // 기존 BodySetup을 참조
+                    break;
+                }
+            }
+        }
+
+        if (bHasExistingBodySetup && ExistingBodySetup)
+        {
+            // 이미 BodySetup이 존재하면, 해당 BodySetup의 디테일을 표시하도록 유도하거나,
+            // 선택을 해당 BodySetup으로 변경할 수 있습니다.
+            ImGui::Text("This bone already has a BodySetup.");
+            if (ImGui::Button(*FString::Printf(TEXT("Select BodySetup for %s"), *SelectedBoneName.ToString())))
+            {
+                SelectedBodySetup = ExistingBodySetup; // 선택을 기존 BodySetup으로 변경
+                // SelectedBoneName은 유지하거나, BodySetup 선택 시 어떻게 할지 정책에 따라 결정
+            }
+            // 또는 바로 RenderObjectDetails(ExistingBodySetup); 호출도 가능
+        }
+        else
+        {
+            // BodySetup이 없는 경우, 생성 버튼 표시
+            FString ButtonLabel = FString::Printf(TEXT("Create BodySetup for %s"), *SelectedBoneName.ToString());
+            if (ImGui::Button(*ButtonLabel))
+            {
+                if (CurrentPhysicsAsset) // CurrentPhysicsAsset이 유효한지 다시 한번 확인
+                {
+                    // 새 USkeletalBodySetup 객체 생성
+                    // Outer를 CurrentPhysicsAsset으로 지정하여 소유 관계를 명확히 합니다.
+                    USkeletalBodySetup* NewBodySetup = FObjectFactory::ConstructObject<USkeletalBodySetup>(CurrentPhysicsAsset);
+                    if (NewBodySetup)
+                    {
+                        NewBodySetup->BoneName = SelectedBoneName;
+                        CurrentPhysicsAsset->SkeletalBodySetups.Add(NewBodySetup);
+                        CurrentPhysicsAsset->UpdateBodySetupIndexMap(); // BodySetup 추가 후 맵 업데이트
+
+                        // 새로 생성된 BodySetup을 바로 선택 상태로 만들 수 있습니다.
+                        SelectedBodySetup = NewBodySetup;
+                        SelectedBoneName = NAME_None; // BodySetup이 선택되었으므로 본 자체 선택은 해제 (선택 사항)
+
+                        UE_LOG(ELogLevel::Display, TEXT("Created BodySetup for bone: %s"), *SelectedBoneName.ToString());
+                    }
+                    else
+                    {
+                        UE_LOG(ELogLevel::Error, TEXT("Failed to construct USkeletalBodySetup for bone: %s"), *SelectedBoneName.ToString());
+                    }
+                }
+            }
+        }
+        
     }
     else if (CurrentPhysicsAsset && !SelectedBodySetup && !SelectedConstraintTemplate && SelectedBoneName == NAME_None)
     {

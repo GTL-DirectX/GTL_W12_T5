@@ -91,6 +91,7 @@ public:
     UMaterial* GetMaterial(const FName& Name) const;
     UAnimationAsset* GetAnimation(const FName& Name) const;
     UParticleSystem* GetParticleSystem(const FName& Name) const;
+    UPhysicsAsset* GetPhysicsAsset(const FName& Name) const;
 
     void GetMaterialKeys(TSet<FName>& OutKeys) const;
     void GetMaterialKeys(TArray<FName>& OutKeys) const;
@@ -102,6 +103,9 @@ public:
     void AddStaticMesh(const FName& Key, UStaticMesh* StaticMesh);
     void AddAnimation(const FName& Key, UAnimationAsset* Animation);
     void AddParticleSystem(const FName& Key, UParticleSystem* ParticleSystem);
+    
+    void SavePhysicsAssets(UPhysicsAsset* PhysicsAsset, const FString& InAssetName);
+
 
 private:
     inline static TMap<EAssetType, TMap<FName, UObject*>> AssetMap;
@@ -110,10 +114,10 @@ private:
     double BinaryLoadTime = 0.0;
 
     void LoadContentFiles();
-
+    
     void HandleFBX(const FAssetInfo& AssetInfo);
-
-    void HandlePhysicsAsset(const FAssetInfo& AssetInfo, bool bIsSave);
+    
+    void LoadPhysicsAsset(const FAssetInfo& AssetInfo);
 
     void AddToAssetMap(const FAssetLoadResult& Result, const FString& BaseName, const FAssetInfo& BaseAssetInfo);
 

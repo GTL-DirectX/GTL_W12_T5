@@ -96,6 +96,7 @@ public:
 
     void SetLoopStartFrame(int32 InLoopStartFrame);
 
+
     int32 GetLoopEndFrame() const;
 
     void SetLoopEndFrame(int32 InLoopEndFrame);
