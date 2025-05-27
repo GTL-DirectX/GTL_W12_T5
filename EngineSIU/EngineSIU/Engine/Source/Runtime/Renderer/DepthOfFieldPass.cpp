@@ -58,7 +58,7 @@ void FDepthOfFieldPass::PrepareRender(const std::shared_ptr<FEditorViewportClien
     Graphics->DeviceContext->IASetInputLayout(nullptr);
     Graphics->DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     Graphics->DeviceContext->RSSetState(Graphics->RasterizerSolidBack);
-
+    Graphics->DeviceContext->OMSetDepthStencilState(Graphics->DepthStencilState_DepthTestDisabled,0);
     Graphics->DeviceContext->PSSetSamplers(0, 1, &Sampler);
 }
 
@@ -166,8 +166,8 @@ void FDepthOfFieldPass::PrepareBlurNearPass(const std::shared_ptr<FEditorViewpor
 
     Graphics->DeviceContext->OMSetDepthStencilState(nullptr, 1);
     Graphics->DeviceContext->OMSetRenderTargets(1, &RenderTargetRHI->RTV, nullptr);
-    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_CoC), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_DoF_CoC)->SRV);
-    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_Scene)->SRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_CoC), 1, &ViewportResource->GetRenderTarget(EResourceType::ERT_DoF_CoC)->SRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, &ViewportResource->GetRenderTarget(EResourceType::ERT_Scene)->SRV);
 
 }
 
@@ -199,8 +199,8 @@ void FDepthOfFieldPass::PrepareBlurFarPass(const std::shared_ptr<FEditorViewport
 
     Graphics->DeviceContext->OMSetDepthStencilState(nullptr, 1);
     Graphics->DeviceContext->OMSetRenderTargets(1, &RenderTargetRHI->RTV, nullptr);
-    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_CoC), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_DoF_CoC)->SRV);
-    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_Scene)->SRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_CoC), 1, &ViewportResource->GetRenderTarget(EResourceType::ERT_DoF_CoC)->SRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, &ViewportResource->GetRenderTarget(EResourceType::ERT_Scene)->SRV);
 
 
 }
@@ -232,10 +232,10 @@ void FDepthOfFieldPass::PrepareCompositePass(const std::shared_ptr<FEditorViewpo
 
     Graphics->DeviceContext->OMSetDepthStencilState(nullptr, 1);
     Graphics->DeviceContext->OMSetRenderTargets(1, &RenderTargetRHI->RTV, nullptr);
-    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_CoC), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_DoF_CoC)->SRV);
-    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_Scene)->SRV);
-    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_BlurNear), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_DoF_BlurNear)->SRV);
-    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_BlurFar), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_DoF_BlurFar)->SRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_CoC), 1, &ViewportResource->GetRenderTarget(EResourceType::ERT_DoF_CoC)->SRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, &ViewportResource->GetRenderTarget(EResourceType::ERT_Scene)->SRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_BlurNear), 1, &ViewportResource->GetRenderTarget(EResourceType::ERT_DoF_BlurNear)->SRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_BlurFar), 1, &ViewportResource->GetRenderTarget(EResourceType::ERT_DoF_BlurFar)->SRV);
 
 }
 
