@@ -372,6 +372,7 @@ xcopy /y /d "$(SolutionDir)$(ProjectName)\Engine\Source\ThirdParty\PhysX\bin\$(C
     <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\BodyInstance.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\BodySetup.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\ConstraintInstance.cpp" />
+    <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\KAggregateGeom.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\PhysicsConstraintTemplate.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\PhysXManager.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\PhysicalMaterial.cpp" />

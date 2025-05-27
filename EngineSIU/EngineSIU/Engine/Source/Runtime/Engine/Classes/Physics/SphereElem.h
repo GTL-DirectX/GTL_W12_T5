@@ -1,9 +1,41 @@
-﻿#pragma once
+#pragma once
 
 #include "ShapeElem.h"
 
 struct FKSphereElem : public FKShapeElem
 {
     DECLARE_STRUCT(FKSphereElem, FKShapeElem)
+
+    FVector Center = FVector::ZeroVector; // Sphere center in local space
+    float Radius = 0.5f; // Sphere radius
     
+    FTransform GetTransform() const
+    {
+        return FTransform(Center);
+    }
+
+    void SetTransform(const FTransform& NewTransform)
+    {
+        Center = NewTransform.GetTranslation();
+    }
+
+    FKSphereElem()
+        : FKShapeElem(EAggCollisionShape::Type::Sphere)
+        , Center(FVector::ZeroVector)
+        , Radius(0.5f)
+    {
+    }
+
+    FKSphereElem(float r)
+        : FKShapeElem(EAggCollisionShape::Type::Box)
+        , Center(FVector::ZeroVector)
+        , Radius(r)
+    {
+    }
+
+    /*FVector GetScaledVolume(const FVector& Scale) const
+    {
+        return 1.3333f * PI * FMath::Pow(Radius * Scale.GetAbs(), 3);
+    }*/
+
 };
