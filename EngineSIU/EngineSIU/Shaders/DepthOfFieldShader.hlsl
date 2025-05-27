@@ -8,25 +8,21 @@ Texture2D FarBlurTexture : register(t109); // 원거리 블러 텍스처
 
 SamplerState LinearSampler : register(s0); // 샘플러 상태
 
-cbuffer CameraDoFConstants : register(b0)
-{
-    float FocalLength; // 초점 거리
-    float Aperture; // 조리개 값
-    float FocusDistance; // 초점 거리
-    float MaxCoC; // 최대 COC (Circle of Confusion)
-    float2 ScreenSize; // 화면 크기
-}
 
-cbuffer DepthOfFieldConstant : register(b1)
+cbuffer DepthOfFieldConstant : register(b0)
 {
     float F_Stop; // f-number
     float SensorWidth_mm; // 센서 너비 (예: 36.0f)
     float FocalDistance_World; // 초점 거리 (cm)
     float FocalLength_mm; // 렌즈 초점 거리 (mm)
+    
     float CoCScaleFactor; // 흐림 강도 스케일 팩터
     float InFocusThreshold; // (생략)
     float MaxBokehRadius; // 최대 보케 반경
-    float pad1;
+    float Padding1;
+    
+    float2 ScreenSize; // 화면 크기
+    float2 Padding2;
 };
 
 struct PS_INPUT
@@ -40,12 +36,12 @@ float LinearizeDepth(float z)
     return NearClip * FarClip / (FarClip - z * (FarClip - NearClip));
 }
 
-float ComputeCoC(float ViewZ)
-{
-    float FocusRange = FocusDistance * 0.5;
-    float coc = abs(ViewZ - FocusDistance) / FocusRange;
-    return saturate(coc) * MaxCoC;
-}
+//float ComputeCoC(float ViewZ)
+//{
+//    float FocusRange = FocusDistance * 0.5;
+//    float coc = abs(ViewZ - FocusDistance) / FocusRange;
+//    return saturate(coc) * MaxCoC;
+//}
 
 float ComputePhysicalCoC(float SceneDepth_World)
 {
@@ -78,31 +74,31 @@ float ComputePhysicalCoC(float SceneDepth_World)
 
 
 
-float3 GaussianBlur(float2 uv, float coc)
-{
-    float2 texelSize = 1.0 / ScreenSize;
-    float3 color = 0;
-    float weightSum = 0;
+//float3 GaussianBlur(float2 uv, float coc)
+//{
+//    float2 texelSize = 1.0 / ScreenSize;
+//    float3 color = 0;
+//    float weightSum = 0;
 
-    const int radius = 8;
+//    const int radius = 8;
 
-    for (int y = -radius; y <= radius; ++y)
-    {
-        for (int x = -radius; x <= radius; ++x)
-        {
-            float2 offset = float2(x, y) * texelSize * coc;
-            float2 sampleUV = uv + offset;
+//    for (int y = -radius; y <= radius; ++y)
+//    {
+//        for (int x = -radius; x <= radius; ++x)
+//        {
+//            float2 offset = float2(x, y) * texelSize * coc;
+//            float2 sampleUV = uv + offset;
 
-            float2 dist = float2(x, y);
-            float weight = exp(-dot(dist, dist) / 20.0); // 가우시안 커널
+//            float2 dist = float2(x, y);
+//            float weight = exp(-dot(dist, dist) / 20.0); // 가우시안 커널
 
-            color += SceneColorTexture.Sample(LinearSampler, sampleUV) * weight;
-            weightSum += weight;
-        }
-    }
+//            color += SceneColorTexture.Sample(LinearSampler, sampleUV) * weight;
+//            weightSum += weight;
+//        }
+//    }
 
-    return color / weightSum;
-}
+//    return color / weightSum;
+//}
 
 static const int NUM_SAMPLES = 19;
 static const float2 PoissonDisk[NUM_SAMPLES] =
@@ -183,15 +179,15 @@ PS_INPUT mainVS(uint VertexID : SV_VertexID)
     return Output;
 }
 
-float4 mainPS(PS_INPUT input) : SV_Target
-{
-    float RawDepth = SceneDepthTexture.Sample(LinearSampler, input.UV).r;
-    float ViewZ = LinearizeDepth(RawDepth);
-    float CoC = ComputeCoC(ViewZ);
-    float3 BlurredColor = GaussianBlur(input.UV, CoC);
-    float Blend = saturate(CoC / MaxCoC);
-    return float4(BlurredColor, Blend);
-}
+//float4 mainPS(PS_INPUT input) : SV_Target
+//{
+//    float RawDepth = SceneDepthTexture.Sample(LinearSampler, input.UV).r;
+//    float ViewZ = LinearizeDepth(RawDepth);
+//    float CoC = ComputeCoC(ViewZ);
+//    float3 BlurredColor = GaussianBlur(input.UV, CoC);
+//    float Blend = saturate(CoC / MaxCoC);
+//    return float4(BlurredColor, Blend);
+//}
 
 
 float4 PS_GenerateCoC(PS_INPUT IN) : SV_Target
