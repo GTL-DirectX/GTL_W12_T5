@@ -569,3 +569,20 @@ struct FCameraDoFConstants
     float Padding1; // 정렬용 패딩
     float Padding2;
 };
+
+struct FDepthOfFieldConstant
+{
+    float F_Stop; // f-number
+    float SensorWidth_mm; // 센서 너비 (예: 36.0f)
+    float FocalDistance_World; // 초점 거리 (cm)
+    float FocalLength_mm; // 렌즈 초점 거리 (mm)
+
+    float CoCScaleFactor; // 흐림 강도 스케일 팩터
+    float InFocusThreshold; // (생략)
+    float MaxBokehRadius; // 최대 보케 반경
+    float Padding1; // 정렬용 패딩
+
+    FVector2D ScreenSize; // 화면 크기 (w, h)
+    float Padding2;
+    float Padding3;
+};
