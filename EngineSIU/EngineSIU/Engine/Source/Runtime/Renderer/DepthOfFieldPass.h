@@ -19,13 +19,10 @@ protected:
     virtual void PrepareRender(const std::shared_ptr<FEditorViewportClient>& Viewport) override;
     virtual void CleanUpRender(const std::shared_ptr<FEditorViewportClient>& Viewport) override;
 private:
-    FWString ShaderKey = L"DepthOfFieldShader";
-    FString DoFConstantBufferKey = "FCameraDoFConstants";
-    ID3D11VertexShader* VertexShader = nullptr;
-    ID3D11PixelShader* PixelShader = nullptr;
+    FWString VS_DrawQuadKey = L"VS_DrawQuad";
+    FString DoFConstantBufferKey = "FDepthOfFieldConstant";
     ID3D11SamplerState* Sampler = nullptr;
 
-    FWString VS_DrawQuadKey = L"VS_DrawQuad";
 private:
     void CreateShader();
     void UpdateDoFConstant(const std::shared_ptr<FEditorViewportClient>& Viewport);
