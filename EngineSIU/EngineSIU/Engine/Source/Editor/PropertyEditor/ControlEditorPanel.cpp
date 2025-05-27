@@ -45,6 +45,8 @@
 #include "Contents/Actors/TriggerBox.h"
 #include "Renderer/CompositingPass.h"
 #include <Engine/FbxLoader.h>
+
+#include "Components/PostProcessVolume.h"
 #include "Engine/Classes/Engine/AssetManager.h"
 #include "Particles/ParticleSystemComponent.h"
 
@@ -229,6 +231,15 @@ void ControlEditorPanel::CreateMenuButton(const ImVec2 ButtonSize, ImFont* IconF
 
         tinyfd_messageBox("알림", "저장되었습니다.", "ok", "info", 1);
     }
+    
+    ImGui::Separator();
+    if (ImGui::MenuItem("Physics Simulation"))
+    {
+        if (UEditorEngine* EditorEngine = Cast<UEditorEngine>(GEngine))
+        {
+            EditorEngine->StartPhysicsViewer("Contents/Human/Human");
+        }
+    }
 
     ImGui::Separator();
 
@@ -354,6 +365,7 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
             {.Label = "TriggerBox", .OBJ = OBJ_TRIGGERBOX},
             {.Label = "SkeletalMeshActor", .OBJ = OBJ_SKELETALMESH},
             {.Label = "SequencerPlayer", .OBJ = OBJ_SEQUENCERPLAYER},
+            {.Label = "PostProcessVolume", .OBJ = OBJ_POSTPROCESSVOLUME},
         };
 
         for (const auto& primitive : primitives)
@@ -504,6 +516,13 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
                 {
                     SpawnedActor = World->SpawnActor<ASequencerPlayer>();
                     SpawnedActor->SetActorLabel(TEXT("OBJ_SEQUENCERPLAYER"));
+                }
+                case OBJ_POSTPROCESSVOLUME:
+                {
+                    SpawnedActor = World->SpawnActor<AActor>();
+                    auto* MeshComp2 = SpawnedActor->AddComponent<UPostProcessVolume>();
+                    SpawnedActor->SetRootComponent(MeshComp2);
+                    SpawnedActor->SetActorLabel(TEXT("OBJ_POSTPROCESSVOLUME"));
                 }
                 case OBJ_CAMERA:
                 case OBJ_PLAYER:

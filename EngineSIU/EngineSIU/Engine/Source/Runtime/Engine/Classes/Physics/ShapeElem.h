@@ -116,13 +116,42 @@ private:
     // 사용자 지정 이름.
     UPROPERTY(EditAnywhere, FName, Name, = NAME_None)
     
-    EAggCollisionShape::Type ShapeType;
+    EAggCollisionShape::Type ShapeType = EAggCollisionShape::Sphere;
 
     // 질량 계산에 기여하는지 여부.
     UPROPERTY(EditAnywhere, bool, bContributeToMass, = true);
 
-    ECollisionEnabled::Type CollisionEnabled;
+    ECollisionEnabled::Type CollisionEnabled = ECollisionEnabled::QueryAndPhysics;
 
     uint8 bIsGenerated = false;
 
+
+public:
+    virtual void Serialize(FArchive& Ar)
+    {
+        int ShapeTypeInt = static_cast<int>(ShapeType);
+        int CollisionEnabledInt = static_cast<int>(CollisionEnabled);
+        Ar << RestOffset 
+                << Name 
+                << ShapeTypeInt
+                << bContributeToMass 
+                << CollisionEnabledInt
+                << bIsGenerated;
+        ShapeType = static_cast<EAggCollisionShape::Type>(ShapeTypeInt);
+        CollisionEnabled = static_cast<ECollisionEnabled::Type>(CollisionEnabledInt);
+    }
+
+
+
+   friend FArchive& operator<<(FArchive& Ar, FKShapeElem& V);
+    
 };
+
+inline FArchive& operator<<(FArchive& Ar, FKShapeElem& V)
+{
+    V.Serialize(Ar);
+    return Ar;
+}
+
+
+

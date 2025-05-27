@@ -38,4 +38,16 @@ struct FKSphereElem : public FKShapeElem
         return 1.3333f * PI * FMath::Pow(Radius * Scale.GetAbs(), 3);
     }*/
 
+
+    void Serialize(FArchive& Ar) override
+    {
+        FKShapeElem::Serialize(Ar);
+    }
+    friend FArchive& operator<<(FArchive& Ar, FKSphereElem& Elem);
 };
+
+inline FArchive& operator<<(FArchive& Ar, FKSphereElem& Elem)
+{
+    Ar.Serialize(Elem);
+    return Ar;
+}

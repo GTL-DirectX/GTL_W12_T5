@@ -31,6 +31,8 @@ void FResourceManager::Initialize(FRenderer* Renderer, FGraphicsDevice* Device)
     
     LoadTextureFromFile(Device->Device, L"Assets/Viewer/Bone_16x.PNG");
     LoadTextureFromFile(Device->Device, L"Assets/Viewer/BoneNonWeighted_16x.PNG");
+    LoadTextureFromFile(Device->Device, L"Assets/Viewer/RigidBody_16x.PNG");
+    LoadTextureFromFile(Device->Device, L"Assets/Viewer/Constraint.PNG");
 }
 
 void FResourceManager::Release(FRenderer* Renderer)
