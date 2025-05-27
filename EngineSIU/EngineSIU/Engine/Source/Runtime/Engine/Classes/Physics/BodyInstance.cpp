@@ -79,6 +79,9 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
         Shape->setLocalPose(BoxLocalPose);
         Shape->setSimulationFilterData(FilterData);
 
+        Shape->setRestOffset(BoxElem.RestOffset);
+        Shape->setContactOffset(BoxElem.RestOffset + 0.5f);
+
         PxRigidActor->attachShape(*Shape);
         Shape->release();
     }
@@ -96,6 +99,9 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
         Shape->setLocalPose(SphereLocalPose);
         Shape->setSimulationFilterData(FilterData);
 
+        Shape->setRestOffset(SphereElem.RestOffset);
+        Shape->setContactOffset(SphereElem.RestOffset + 0.5f);
+
         PxRigidActor->attachShape(*Shape);
         Shape->release();
     }
@@ -112,6 +118,9 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
         PxTransform SphylLocalPose = ToPxTransform(SphylLocalTM);
         Shape->setLocalPose(SphylLocalPose);
         Shape->setSimulationFilterData(FilterData);
+
+        Shape->setRestOffset(SphylElem.RestOffset);
+        Shape->setContactOffset(SphylElem.RestOffset + 0.5f);
 
         PxRigidActor->attachShape(*Shape);
         Shape->release();
