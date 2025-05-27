@@ -184,7 +184,7 @@ void UEditorEngine::StartPIE()
     // WorldList.Add(GetWorldContextFromWorld(PIEWorld));
 }
 
-void UEditorEngine::StartSimulationViewer(FName SimulationName)
+void UEditorEngine::StartSimulationViewer()
 {
     if (SimulationViewerWorld or !PhysicsViewerWorld)
     {
@@ -313,6 +313,9 @@ void UEditorEngine::StartPhysicsViewer(FName SkeletalMeshName)
     CameraLocation = Camera.GetLocation();
     CameraRotation = Camera.GetRotation();
     Camera.SetRotation(FVector(0.0f, 30, 180));
+
+    SelectActor(SkeletalActor);
+    SelectComponent(MeshComp);
 
 
     if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(MeshComp))
@@ -483,7 +486,7 @@ void UEditorEngine::EndSimulationViewer()
         ClearActorSelection();
         ClearComponentSelection();
     }
-    ActiveWorld = EditorWorld;
+    ActiveWorld = PhysicsViewerWorld;
 }
 
 

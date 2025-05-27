@@ -14,17 +14,20 @@ PhysicsAssetEditorPanel::PhysicsAssetEditorPanel()
 {
     // 이 패널이 지원하는 월드 타입을 설정할 수 있습니다.
     SetSupportedWorldTypes(EWorldTypeBitFlag::PhysicsViewer | EWorldTypeBitFlag::SimulationViewer);
-    LoadIcons();
+    
 }
 
 PhysicsAssetEditorPanel::~PhysicsAssetEditorPanel()
 {
-    // 소멸자에서 리소스 정리 (예: 아이콘 SRV 해제)
 }
 
 void PhysicsAssetEditorPanel::Render()
 {
     UEditorEngine* Engine = Cast<UEditorEngine>(GEngine);
+
+    if (BoneIconSRV == nullptr || BodyIconSRV == nullptr) {
+        LoadIcons();
+    }
 
     USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(Engine->GetSelectedComponent());
 
@@ -33,23 +36,93 @@ void PhysicsAssetEditorPanel::Render()
         SetSkeletalMesh(SkeletalMeshComponent->GetSkeletalMeshAsset());
     }
     
-    if (!Engine || !CurrentPhysicsAsset)
+    // if (!Engine || !CurrentPhysicsAsset)
+    // {
+    //     // 엔진이나 피직스 에셋이 없으면 아무것도 렌더링하지 않음
+    //     // 또는 "피직스 에셋을 선택해주세요" 같은 메시지 표시 가능
+    //     ImGui::Begin("Physics Asset Editor");
+    //     ImGui::Text("No Physics Asset selected or loaded.");
+    //     ImGui::End();
+    //     return;
+    // }
+
+    if (CurrentPhysicsAsset)
     {
-        // 엔진이나 피직스 에셋이 없으면 아무것도 렌더링하지 않음
-        // 또는 "피직스 에셋을 선택해주세요" 같은 메시지 표시 가능
-        ImGui::Begin("Physics Asset Editor");
-        ImGui::Text("No Physics Asset selected or loaded.");
-        ImGui::End();
-        return;
+        
+        CurrentPhysicsAsset->UpdateBodySetupIndexMap();
     }
 
-    CurrentPhysicsAsset->UpdateBodySetupIndexMap();
+
+    // --- 버튼들을 위한 공간 확보 및 스타일 ---
+    const float ButtonHeight = 60.0f;
+    const float ButtonPanelPadding = 5.0f; // 버튼과 창 가장자리 사이의 간격
+    const float TopButtonY = ButtonPanelPadding;
+    const float BottomButtonY = Height - ButtonHeight - ButtonPanelPadding;
+
+    // --- 좌상단 저장 버튼 ---
+    ImGui::SetNextWindowPos(ImVec2(ButtonPanelPadding, TopButtonY), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(80, ButtonHeight), ImGuiCond_Always); // 버튼 크기에 맞게 조절
+    ImGui::Begin("SaveAssetButton", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground);
+    if (ImGui::Button("Save", ImVec2(-1, -1))) // -1은 사용 가능한 전체 너비/높이를 의미
+    {
+        // if (CurrentPhysicsAsset)
+        // {
+        //     // 에셋 저장 로직 (UAssetManager 사용 예시)
+        //     // 실제 저장 경로나 방식은 엔진 구현에 따라 달라질 수 있습니다.
+        //     FString PackagePath = CurrentPhysicsAsset->GetPackagePath(); // 에셋의 패키지 경로 가져오기
+        //     if (!PackagePath.IsEmpty())
+        //     {
+        //         UAssetManager::Get().SaveAsset(CurrentPhysicsAsset, PackagePath);
+        //         UE_LOG(LogTemp, Log, TEXT("PhysicsAsset '%s' saved to '%s'"), *CurrentPhysicsAsset->GetName(), *PackagePath);
+        //     }
+        //     else
+        //     {
+        //         UE_LOG(LogTemp, Warning, TEXT("Could not save PhysicsAsset '%s': PackagePath is empty."), *CurrentPhysicsAsset->GetName());
+        //         // 필요하다면 "Save As" 다이얼로그 로직 추가
+        //     }
+        // }
+    }
+    ImGui::End();
+
+    // --- 우상단 시뮬레이션 버튼 ---
+    ImGui::SetNextWindowPos(ImVec2(Width - 90 - ButtonPanelPadding, TopButtonY), ImGuiCond_Always); // 버튼 너비만큼 왼쪽으로 이동
+    ImGui::SetNextWindowSize(ImVec2(100, ButtonHeight), ImGuiCond_Always); // 버튼 크기에 맞게 조절 (텍스트 길이에 따라)
+    ImGui::Begin("SimulateButton", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground);
+    // 시뮬레이션 상태에 따라 버튼 텍스트 변경 (예시)
+
+    
+    bool bIsSimulating;
+    if (Engine->ActiveWorld->WorldType == EWorldType::SimulationViewer)
+    {
+        bIsSimulating = true;
+    }
+    else
+    {
+        bIsSimulating = false; // 현재 시뮬레이션 상태를 확인하는 로직 필요
+    }
+
+    if (ImGui::Button(bIsSimulating ? "Stop Sim" : "Simulate", ImVec2(-1, -1)))
+    {
+        if (bIsSimulating)
+        {
+            Engine->EndSimulationViewer(); // 엔진에 이런 함수가 있다고 가정
+        }
+        else
+        {
+            Engine->StartSimulationViewer(); // 엔진에 이런 함수가 있다고 가정
+        }
+    }
+    ImGui::End();
 
     // --- 스켈레톤 트리 패널 렌더링 ---
-    const float TreePanelWidth = Width * 0.25f;
-    const float TreePanelHeight = Height; // 전체 높이 사용 또는 조절
+    const float PanelStartY = TopButtonY + ButtonHeight + ButtonPanelPadding;
+    const float PanelAvailableHeight = Height - PanelStartY - (ButtonHeight + ButtonPanelPadding * 2); // 상단 버튼 영역과 하단 버튼 영역 제외
 
-    ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+    const float TreePanelWidth = Width * 0.25f;
+    const float TreePanelHeight = PanelAvailableHeight;
+    const float TreePanelPosX = 0; // 화면 왼쪽 시작
+
+    ImGui::SetNextWindowPos(ImVec2(TreePanelPosX, PanelStartY), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(TreePanelWidth, TreePanelHeight), ImGuiCond_Always);
 
     constexpr ImGuiWindowFlags TreePanelFlags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_HorizontalScrollbar;
@@ -62,11 +135,11 @@ void PhysicsAssetEditorPanel::Render()
     ImGui::End();
 
     // --- 디테일 패널 렌더링 ---
-    const float DetailsPanelPosX = TreePanelWidth; // 트리 패널 바로 오른쪽에서 시작
-    const float DetailsPanelWidth = Width - TreePanelWidth; // 전체 너비에서 트리 패널 너비를 뺀 나머지
-    const float DetailsPanelHeight = Height; // 전체 창 높이 사용
+    const float DetailsPanelWidth = Width * 0.25f; // 디테일 패널 너비를 전체의 35% 정도로 설정 (조절 가능)
+    const float DetailsPanelPosX = Width - DetailsPanelWidth; // 화면 오른쪽 끝에서 DetailsPanelWidth만큼 떨어진 위치
+    const float DetailsPanelHeight = PanelAvailableHeight;
 
-    ImGui::SetNextWindowPos(ImVec2(DetailsPanelPosX, 0), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(DetailsPanelPosX, PanelStartY), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(DetailsPanelWidth, DetailsPanelHeight), ImGuiCond_Always);
 
     constexpr ImGuiWindowFlags DetailsPanelFlags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_HorizontalScrollbar;
@@ -76,8 +149,17 @@ void PhysicsAssetEditorPanel::Render()
     }
     ImGui::End();
 
-    // 여기에 다른 패널들 (예: 디테일 패널, 뷰포트 등) 렌더링 코드 추가
-    // ...
+    // --- 우하단 나가기 버튼 ---
+    ImGui::SetNextWindowPos(ImVec2(Width - 80 - ButtonPanelPadding, BottomButtonY), ImGuiCond_Always); // 버튼 너비만큼 왼쪽으로 이동
+    ImGui::SetNextWindowSize(ImVec2(80, ButtonHeight), ImGuiCond_Always);
+    ImGui::Begin("ExitButton", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground);
+    if (ImGui::Button("Exit", ImVec2(-1, -1)))
+    {
+        // 나가기 로직 (예: 에디터 패널 닫기 또는 이전 뷰로 돌아가기)
+        // UEditorEngine에 해당 기능이 있다면 호출
+        Engine->EndPhysicsViewer(); // 이런 함수가 있다고 가정
+    }
+    ImGui::End();
 }
 
 void PhysicsAssetEditorPanel::SetSkeletalMesh(USkeletalMesh* InSkeletalMesh)
@@ -380,14 +462,9 @@ void PhysicsAssetEditorPanel::RenderBoneNodeRecursive(const FReferenceSkeleton& 
 
 void PhysicsAssetEditorPanel::LoadIcons()
 {
+    BoneIconSRV = FEngineLoop::ResourceManager.GetTexture(L"Assets/Viewer/Bone_16x.PNG")->TextureSRV;
+    BodyIconSRV = FEngineLoop::ResourceManager.GetTexture(L"Assets/Viewer/RigidBody_16x.PNG")->TextureSRV;
+    ConstraintIconSRV = FEngineLoop::ResourceManager.GetTexture(L"Assets/Viewer/Constraint.PNG")->TextureSRV;
+
 }
 
-/*
-// 아이콘 로드 함수 예시 (실제 구현 필요)
-void PhysicsAssetEditorPanel::LoadIcons()
-{
-    // BoneIconSRV = FEngineLoop::ResourceManager.GetTexture(L"Assets/Editor/Icons/Bone_Icon.png")->TextureSRV;
-    // BodyIconSRV = FEngineLoop::ResourceManager.GetTexture(L"Assets/Editor/Icons/Body_Icon.png")->TextureSRV;
-    // ConstraintIconSRV = FEngineLoop::ResourceManager.GetTexture(L"Assets/Editor/Icons/Constraint_Icon.png")->TextureSRV;
-}
-*/

@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include <PxPhysicsAPI.h>
-#include <__msvc_ranges_to.hpp>
 
 #include "Math/Transform.h"
 #include "Math/Matrix.h"

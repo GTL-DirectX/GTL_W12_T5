@@ -62,5 +62,22 @@ struct FKBoxElem : public FKShapeElem
     }
 
     float GetScaledVolume(const FVector& Scale3D) const { return FMath::Abs(Scale3D.X * Scale3D.Y * Scale3D.Z * X * Y * Z); }
-    
+
+
+    void Serialize(FArchive& Ar) override
+    {
+        FKShapeElem::Serialize(Ar);
+        Ar << Center;
+        Ar << Rotation;
+        Ar << X;
+        Ar << Y;
+        Ar << Z;
+    }
+    friend FArchive& operator<<(FArchive& Ar, FKBoxElem& Elem);
 };
+
+inline FArchive& operator<<(FArchive& Ar, FKBoxElem& Elem)
+{
+    Ar.Serialize(Elem);
+    return Ar;
+}

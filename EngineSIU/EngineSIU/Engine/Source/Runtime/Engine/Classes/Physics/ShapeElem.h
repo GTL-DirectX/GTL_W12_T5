@@ -134,7 +134,8 @@ private:
     uint8 bIsGenerated = false;
 
 
-    void Serialize(FArchive& Ar)
+public:
+    virtual void Serialize(FArchive& Ar)
     {
         int ShapeTypeInt = static_cast<int>(ShapeType);
         int CollisionEnabledInt = static_cast<int>(CollisionEnabled);
@@ -142,33 +143,22 @@ private:
                 << Name 
                 << ShapeTypeInt
                 << bContributeToMass 
-                << CollisionEnabledInt;
+                << CollisionEnabledInt
+                << bIsGenerated;
         ShapeType = static_cast<EAggCollisionShape::Type>(ShapeTypeInt);
         CollisionEnabled = static_cast<ECollisionEnabled::Type>(CollisionEnabledInt);
-   }
+    }
 
 
-    friend FArchive& operator<<(FArchive& Ar, FKShapeElem& V);
+
+   friend FArchive& operator<<(FArchive& Ar, FKShapeElem& V);
     
 };
 
 inline FArchive& operator<<(FArchive& Ar, FKShapeElem& V)
 {
-    int ShapeTypeInt = static_cast<int>(V.ShapeType);
-    int CollisionEnabledInt = static_cast<int>(V.CollisionEnabled);
-
-    Ar << V.RestOffset 
-              << V.Name 
-              << ShapeTypeInt
-              << V.bContributeToMass 
-              << CollisionEnabledInt;
-
-    
-    V.ShapeType = static_cast<EAggCollisionShape::Type>(ShapeTypeInt);
-    V.CollisionEnabled = static_cast<ECollisionEnabled::Type>(CollisionEnabledInt);
+    V.Serialize(Ar);
     return Ar;
-
-    
 }
 
 

@@ -113,15 +113,24 @@ private:
 
     void HandleFBX(const FAssetInfo& AssetInfo);
 
+    void HandlePhysicsAsset(const FAssetInfo& AssetInfo, bool bIsSave);
+
     void AddToAssetMap(const FAssetLoadResult& Result, const FString& BaseName, const FAssetInfo& BaseAssetInfo);
 
     bool LoadFbxBinary(const FString& FilePath, FAssetLoadResult& Result, const FString& BaseName, const FString& FolderPath);
 
+    bool LoadPhysicsAssetBinary(const FString& FilePath, FAssetLoadResult& Result, const FString& BaseName, const FString& FolderPath);
+    
     bool SaveFbxBinary(const FString& FilePath, FAssetLoadResult& Result, const FString& BaseName, const FString& FolderPath);
 
+    bool SavePhysicsAssetBinary(const FString& FilePath, FAssetLoadResult& Result, const FString& BaseName, const FString& FolderPath);
+    
     static constexpr uint32 Version = 1;
 
     bool SerializeVersion(FArchive& Ar);
 
+    
     bool SerializeAssetLoadResult(FArchive& Ar, FAssetLoadResult& Result, const FString& BaseName, const FString& FolderPath);
 };
+
+

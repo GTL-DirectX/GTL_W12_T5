@@ -188,6 +188,18 @@ void UAssetManager::LoadContentFiles()
 
             HandleFBX(AssetInfo);
         }
+        else if (Entry.path().extension() == ".physbin")
+        {
+            FAssetInfo AssetInfo = {};
+            AssetInfo.SourceFilePath = Entry.path().generic_string();
+            AssetInfo.PackagePath = FName(Entry.path().parent_path().generic_string());
+            AssetInfo.Size = static_cast<uint32>(std::filesystem::file_size(Entry.path()));
+            AssetInfo.AssetType = EAssetType::PhysicsAsset;
+            AssetInfo.AssetName = FName(Entry.path().filename().generic_string());
+
+            HandlePhysicsAsset(AssetInfo, false);
+        }
+
     }
 
     OutputDebugStringA(std::format("FBX Load Time: {:.2f} s\nBinary Load Time: {:.2f} s", FbxLoadTime / 1000.0, BinaryLoadTime / 1000.0).c_str());
@@ -272,6 +284,59 @@ void UAssetManager::HandleFBX(const FAssetInfo& AssetInfo)
     {
         // 바이너리 작성
         SaveFbxBinary(BinFilePath, Result, BaseName, FolderPath);
+    }
+}
+
+void UAssetManager::HandlePhysicsAsset(const FAssetInfo& AssetInfo, bool bIsSave)
+{
+    // TODO : ControlEditorPanel Viwer Open과 코드 중복 다수
+    // 경로, 이름 준비
+    FString BaseName;
+
+    FWString FilePath = AssetInfo.SourceFilePath.ToWideString();
+    FWString FolderPath = FilePath.substr(0, FilePath.find_last_of(L"\\/") + 1);
+    FWString FileName = FilePath.substr(FilePath.find_last_of(L"\\/") + 1);
+    size_t DotPos = FileName.find_last_of('.');
+    if (DotPos != std::string::npos)
+    {
+        BaseName = FileName.substr(0, DotPos);
+    }
+    else
+    {
+        BaseName = FileName;
+    }
+
+    const FString BinFilePath = FilePath;
+
+    LARGE_INTEGER StartTime;
+    LARGE_INTEGER EndTime;
+    
+    FAssetLoadResult Result;
+        
+    if (bIsSave == false)
+    {
+        
+        
+        QueryPerformanceCounter(&StartTime);
+        
+        // bin 파일 읽기
+        LoadPhysicsAssetBinary(BinFilePath, Result, BaseName, FolderPath);
+        QueryPerformanceCounter(&EndTime);
+        
+        LARGE_INTEGER Frequency;
+        QueryPerformanceFrequency(&Frequency);
+        {
+            BinaryLoadTime += (static_cast<double>(EndTime.QuadPart - StartTime.QuadPart) * 1000.f / static_cast<double>(Frequency.QuadPart));
+        }
+        
+        // 로드된 에셋 등록
+        AddToAssetMap(Result, BaseName, AssetInfo);
+    }
+
+    if (!bIsSave)
+    {
+        // 바이너리 작성
+        SavePhysicsAssetBinary(BinFilePath, Result, BaseName, FolderPath);
     }
 }
 
@@ -414,7 +479,87 @@ bool UAssetManager::LoadFbxBinary(const FString& FilePath, FAssetLoadResult& Res
     return true;
 }
 
+bool UAssetManager::LoadPhysicsAssetBinary(const FString& FilePath, FAssetLoadResult& Result, const FString& BaseName, const FString& FolderPath)
+{
+    std::filesystem::path Path = FilePath.ToWideString();
+
+    TArray<uint8> LoadData;
+    {
+        std::ifstream InputStream{ Path, std::ios::binary | std::ios::ate };
+        if (!InputStream.is_open())
+        {
+            return false;
+        }
+
+        const std::streamsize FileSize = InputStream.tellg();
+        if (FileSize < 0)
+        {
+            // Error getting size
+            InputStream.close();
+            return false;
+        }
+        if (FileSize == 0)
+        {
+            // Empty file is valid
+            InputStream.close();
+            return false; // Buffer remains empty
+        }
+
+        InputStream.seekg(0, std::ios::beg);
+
+        LoadData.SetNum(static_cast<int32>(FileSize));
+        InputStream.read(reinterpret_cast<char*>(LoadData.GetData()), FileSize);
+
+        if (InputStream.fail() || InputStream.gcount() != FileSize)
+        {
+            return false;
+        }
+        InputStream.close();
+    }
+
+    FMemoryReader Reader(LoadData);
+
+    SerializeVersion(Reader);
+    SerializeAssetLoadResult(Reader, Result, BaseName, FolderPath);
+
+    return true;
+}
+
 bool UAssetManager::SaveFbxBinary(const FString& FilePath, FAssetLoadResult& Result, const FString& BaseName, const FString& FolderPath)
+{
+    std::filesystem::path Path = FilePath.ToWideString();
+
+    TArray<uint8> SaveData;
+    FMemoryWriter Writer(SaveData);
+
+    SerializeVersion(Writer);
+    bool bSerialized = SerializeAssetLoadResult(Writer, Result, BaseName, FolderPath);
+    if (!bSerialized)
+    {
+        return false;
+    }
+
+    std::ofstream OutputStream{ Path, std::ios::binary | std::ios::trunc };
+    if (!OutputStream.is_open())
+    {
+        return false;
+    }
+
+    if (SaveData.Num() > 0)
+    {
+        OutputStream.write(reinterpret_cast<const char*>(SaveData.GetData()), SaveData.Num());
+
+        if (OutputStream.fail())
+        {
+            return false;
+        }
+    }
+
+    OutputStream.close();
+    return true;
+}
+
+bool UAssetManager::SavePhysicsAssetBinary(const FString& FilePath, FAssetLoadResult& Result, const FString& BaseName, const FString& FolderPath)
 {
     std::filesystem::path Path = FilePath.ToWideString();
 
