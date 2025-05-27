@@ -334,10 +334,10 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
 
         ImGui::Spacing();
 
-        ImGui::Text("SensroWidth");
+        ImGui::Text("SensorWidth");
         float SensorWidth_mm = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->SensorWidth_mm;
         ImGui::SetNextItemWidth(120.0f);
-        if (ImGui::DragFloat("##SensroWidth", &SensorWidth_mm, 1.0f, 1.0f, 100.0f, "%.1f"))
+        if (ImGui::DragFloat("##SensorWidth", &SensorWidth_mm, 1.0f, 1.0f, 100.0f, "%.1f"))
         {
             GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->SensorWidth_mm = SensorWidth_mm;
         }
