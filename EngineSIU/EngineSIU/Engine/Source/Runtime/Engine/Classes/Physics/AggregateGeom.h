@@ -10,4 +10,15 @@ struct FKAggregateGeom
     TArray<FKBoxElem> BoxElems;
     TArray<FKSphylElem> SphylElems;
     TArray<FKConvexElem> ConvexElems;
+
+    friend FArchive& operator<<(FArchive& Ar, FKAggregateGeom& V);
+
+
 };
+
+inline FArchive& operator<<(FArchive& Ar, FKAggregateGeom& V)
+{
+    {
+        return Ar << V.SphereElems<< V.BoxElems << V.SphylElems << V.ConvexElems;
+    }
+}

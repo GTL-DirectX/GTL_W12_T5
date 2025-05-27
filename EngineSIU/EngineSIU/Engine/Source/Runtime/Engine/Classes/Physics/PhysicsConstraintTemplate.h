@@ -1,8 +1,7 @@
 ﻿#pragma once
-
-#include "ConstraintInstance.h"
 #include "UObject/Object.h"
 #include "UObject/ObjectMacros.h"
+#include "ConstraintInstance.h"
 
 class UPhysicsConstraintTemplate : public UObject
 {
@@ -14,5 +13,10 @@ public:
     
     UPhysicsConstraintTemplate() = default;
 
+
+    
+    virtual void Serialize(FArchive& Ar) override;
+    
+    
 
 };

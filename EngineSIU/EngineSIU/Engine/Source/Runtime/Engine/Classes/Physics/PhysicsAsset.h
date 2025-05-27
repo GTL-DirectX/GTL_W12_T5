@@ -15,7 +15,13 @@ class USkeletalBodySetup : public UBodySetup
 
 public:
     USkeletalBodySetup() = default;
+
     
+    
+    virtual void Serialize(FArchive& Ar) override
+    {
+        Super::Serialize(Ar);
+    }
 };
 
 class UPhysicsAsset : public UObject
@@ -34,5 +40,7 @@ public:
 
     /** This caches the BodySetup Index by BodyName to speed up FindBodyIndex */
     TMap<FName, int32>					BodySetupIndexMap;
+
+    virtual void SerializeAsset(FArchive& Ar) override;
 
 };

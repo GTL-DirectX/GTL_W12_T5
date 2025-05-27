@@ -18,6 +18,12 @@ public:
     // ECollisionTraceFlag CollisionTraceFlag;
 
     FName BoneName;
+
+    virtual void Serialize(FArchive& Ar) override
+    {
+        Super::Serialize(Ar);
+        Ar << BoneName;
+    }
     
 };
 
@@ -36,6 +42,9 @@ public:
     bool bGenerateMirroredCollision = false;
 
     float CalculateMass() const;
+
+    virtual void Serialize(FArchive& Ar) override;
+    
     
 private:
     FKAggregateGeom AggGeom;

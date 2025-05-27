@@ -27,6 +27,8 @@ public:
     void SetDynamicFriction(float InDynamicFriction);
     void SetRestitution(float InRestitution);
 
+    virtual void Serialize(FArchive& Ar) override;
+
 private:
     physx::PxMaterial* CachedMaterial = nullptr;
     

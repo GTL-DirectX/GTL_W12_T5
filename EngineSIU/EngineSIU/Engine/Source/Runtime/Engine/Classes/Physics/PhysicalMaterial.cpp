@@ -37,3 +37,11 @@ void UPhysicalMaterial::SetRestitution(float InRestitution)
         CachedMaterial->setRestitution(InRestitution);
     }
 }
+
+void UPhysicalMaterial::Serialize(FArchive& Ar)
+{
+    UObject::Serialize(Ar);
+    Ar << StaticFriction;
+    Ar << DynamicFriction;
+    Ar << Restitution;
+}

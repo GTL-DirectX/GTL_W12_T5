@@ -3,6 +3,7 @@
 #include "UObject/Object.h"
 #include "UObject/ObjectMacros.h"
 
+class UPhysicsAsset;
 class UParticleSystem;
 class UAnimationAsset;
 class USkeleton;
@@ -17,6 +18,7 @@ enum class EAssetType : uint8
     Texture2D,
     Material,
     ParticleSystem,
+    PhysicsAsset,
 };
 
 struct FAssetInfo
@@ -55,6 +57,7 @@ struct FAssetLoadResult
     TArray<UStaticMesh*> StaticMeshes;
     TArray<UMaterial*> Materials;
     TArray<UAnimationAsset*> Animations;
+    TArray<UPhysicsAsset*> PhysicsAssets;
 };
 
 class UAssetManager : public UObject

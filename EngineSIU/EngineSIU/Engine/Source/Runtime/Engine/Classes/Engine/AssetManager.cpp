@@ -14,6 +14,7 @@
 #include "Asset/SkeletalMeshAsset.h"
 #include "Asset/StaticMeshAsset.h"
 #include "Particles/ParticleSystem.h"
+#include "Physics/PhysicsAsset.h"
 #include "Serialization/MemoryArchive.h"
 #include "UObject/ObjectFactory.h"
 
@@ -350,6 +351,21 @@ void UAssetManager::AddToAssetMap(const FAssetLoadResult& Result, const FString&
 
         AssetMap[EAssetType::Animation].Add(Key, Animation);
     }
+
+    for (int32 i = 0 ; i < Result.PhysicsAssets.Num(); ++i)
+    {
+        UPhysicsAsset* PhysicsAsset = Result.PhysicsAssets[i];
+        FString BaseAssetName = PhysicsAsset->GetName();
+
+        FAssetInfo Info = BaseAssetInfo;
+        Info.AssetName = FName(BaseAssetName);
+        Info.AssetType = EAssetType::PhysicsAsset;
+        
+        FString Key = Info.GetFullPath();
+        AssetRegistry->PathNameToAssetInfo.Add(Key, Info);
+
+        AssetMap[EAssetType::PhysicsAsset].Add(Key, PhysicsAsset);
+    }
 }
 
 bool UAssetManager::LoadFbxBinary(const FString& FilePath, FAssetLoadResult& Result, const FString& BaseName, const FString& FolderPath)
@@ -459,6 +475,7 @@ bool UAssetManager::SerializeAssetLoadResult(FArchive& Ar, FAssetLoadResult& Res
     uint8 SkeletalMeshNum = 0;
     uint8 StaticMeshNum = 0;
     uint8 AnimationNum = 0;
+    uint8 PhysicsAssetNum = 0;
 
     if (Ar.IsSaving())
     {
@@ -467,9 +484,10 @@ bool UAssetManager::SerializeAssetLoadResult(FArchive& Ar, FAssetLoadResult& Res
         SkeletalMeshNum = Result.SkeletalMeshes.Num();
         StaticMeshNum = Result.StaticMeshes.Num();
         AnimationNum = Result.Animations.Num();
+        PhysicsAssetNum = Result.PhysicsAssets.Num();
     }
 
-    Ar << MaterialNum << SkeletonNum << SkeletalMeshNum << StaticMeshNum << AnimationNum;
+    Ar << MaterialNum << SkeletonNum << SkeletalMeshNum << StaticMeshNum << AnimationNum /* << PhysicsAssetNum */;
 
     // Load 과정에서 Key를 통해 오브젝트를 찾기 위한 맵
     TMap<FName, USkeleton*> TempSkeletonMap;
@@ -746,6 +764,37 @@ bool UAssetManager::SerializeAssetLoadResult(FArchive& Ar, FAssetLoadResult& Res
         }
 
         Animation->SerializeAsset(Ar);
+    }
+
+    for (int i = 0 ; i < PhysicsAssetNum; ++i)
+    {
+        FAssetInfo Info;
+        if (Ar.IsSaving())
+        {
+            FName Key = FolderPath / (i > 0 ? BaseName + FString::FromInt(i) : BaseName);
+            if (AssetRegistry->PathNameToAssetInfo.Contains(Key))
+            {
+                Info = AssetRegistry->PathNameToAssetInfo[Key];
+            }
+            else
+            {
+                return false;
+            }
+        }
+        Info.Serialize(Ar);
+
+        UPhysicsAsset* PhysicsAsset = nullptr;
+        if (Ar.IsLoading())
+        {
+            PhysicsAsset = FObjectFactory::ConstructObject<UPhysicsAsset>(nullptr, Info.AssetName);
+            Result.PhysicsAssets.Add(PhysicsAsset);
+        }
+        else
+        {
+            PhysicsAsset = Result.PhysicsAssets[i];
+        }
+
+        PhysicsAsset->SerializeAsset(Ar);
     }
 
     return true;
