@@ -32,7 +32,8 @@ struct FBodyInstance : public FBodyInstanceCore
     DECLARE_STRUCT(FBodyInstance, FBodyInstanceCore)
 
     int32 InstanceBodyIndex = INDEX_NONE;
-    
+
+    PxRigidDynamic* RigidBody = nullptr;
     PxRigidActor* PxRigidActor = nullptr; // Pointer to the PhysX rigid actor that this instance is associated with
 
     UBodySetup* BodySetup = nullptr; // BodySetupCore pointer that this instance is initialized from
@@ -51,6 +52,8 @@ struct FBodyInstance : public FBodyInstanceCore
 
     // Body 생성
     void InitBody(PxScene* Scene, class UPrimitiveComponent* Owner);
+
+    void UpdateComponentTransform(class UPrimitiveComponent* Owner, float DeltaTime);
 
     // 힘/속도/토크 API
     void AddForce(const FVector& Force);

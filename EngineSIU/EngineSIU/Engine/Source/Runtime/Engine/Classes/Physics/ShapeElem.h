@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Container/Array.h"
+#include "PropertyEditor/ShowFlags.h"
 #include "UObject/ObjectMacros.h"
 
 // TODO: EngineType으로 옮겨져야 하는 Enum.
@@ -50,11 +51,74 @@ struct FKShapeElem
     
 public:
 
+    FKShapeElem()
+    : RestOffset(0.f)
+    , bIsGenerated(false)
+    , ShapeType(EAggCollisionShape::Unknown)
+    , bContributeToMass(true)
+    , CollisionEnabled(ECollisionEnabled::QueryAndPhysics)
+    {}
+
+    FKShapeElem(EAggCollisionShape::Type InShapeType)
+    : RestOffset(0.f)
+    , bIsGenerated(false)
+    , ShapeType(InShapeType)
+    , bContributeToMass(true)
+    , CollisionEnabled(ECollisionEnabled::QueryAndPhysics)
+    {}
+
+    FKShapeElem(const FKShapeElem& Other)
+    : RestOffset(Other.RestOffset)
+    , bIsGenerated(Other.bIsGenerated)
+    , Name(Other.Name)
+    , ShapeType(Other.ShapeType)
+    , bContributeToMass(Other.bContributeToMass)
+    , CollisionEnabled(Other.CollisionEnabled)
+    {}
+
+    virtual ~FKShapeElem() {}
+
+    const FKShapeElem& operator=(const FKShapeElem& Other)
+    {
+        CloneElem(Other);
+        return *this;
+    }
+
+    template <typename T>
+    T* GetShapeCheck()
+    {
+        if (T::StaticShapeType == ShapeType)
+        {
+            return static_cast<T*>(this);
+        }
+        return nullptr;
+    }
+
+
+    const FName& GetName() const { return Name; }
+    void SetName(const FName& InName) { Name = InName; }
+    EAggCollisionShape::Type GetShapeType() const { return ShapeType; }
+    bool GetContributeToMass() const { return bContributeToMass; }
+    void SetContributeToMass(bool bInContributeToMass) { bContributeToMass = bInContributeToMass; }
+    void SetCollionEnabled(ECollisionEnabled::Type InCollisionEnabled) { CollisionEnabled = InCollisionEnabled; }
+    ECollisionEnabled::Type GetCollisionEnabled() const { return CollisionEnabled; }
+
     /* 
         접촉 계산 시 오프셋 거리.
         충돌 검출 시 두 충돌 사이 약간의 여유 간격을 두어 충돌 감지를 부드럽게 만들기 위한 변수.
      */
     UPROPERTY(EditAnywhere, float, RestOffset, = 0.0f)
+
+protected:
+    void CloneElem(const FKShapeElem& Other)
+    {
+        RestOffset = Other.RestOffset;
+        ShapeType = Other.ShapeType;
+        Name = Other.Name;
+        bContributeToMass = Other.bContributeToMass;
+        CollisionEnabled = Other.CollisionEnabled;
+        bIsGenerated = Other.bIsGenerated;
+    }
 
 private:
     // 사용자 지정 이름.
@@ -67,7 +131,8 @@ private:
 
     ECollisionEnabled::Type CollisionEnabled = ECollisionEnabled::QueryAndPhysics;
 
-    
+    uint8 bIsGenerated = false;
+
 
     void Serialize(FArchive& Ar)
     {

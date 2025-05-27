@@ -118,6 +118,15 @@ public:
     }
     
     FBoundingBox GetBoundingBox() const { return AABB; }
+
+    virtual class UBodySetup* GetBodySetup() const { return nullptr; }
+
+public:
+    FBodyInstance BodyInstance;
+
+protected:
+    void SyncPhysics(float DeltaTime);
+    
 };
 
 
@@ -137,7 +146,5 @@ struct FPredicateOverlapHasDifferentActor
 private:
     const AActor* const MyOwnerPtr;
 
-public:
-    FBodyInstance BodyInstance;
     
 };

@@ -1,6 +1,8 @@
 ﻿#pragma once
 
 #include <PxPhysicsAPI.h>
+#include <__msvc_ranges_to.hpp>
+
 #include "Math/Transform.h"
 #include "Math/Matrix.h"
 
@@ -31,7 +33,7 @@ inline PxQuat ToPxQuat(const FQuat& Quat)
     return PxQuat(Quat.X, Quat.Y, Quat.Z, Quat.W);
 }
 
-PxTransform ToPxTransform(const FTransform& Transform)
+inline PxTransform ToPxTransform(const FTransform& Transform)
 {
     return PxTransform(
         ToPxVec3(Transform.GetTranslation()),
@@ -62,3 +64,13 @@ inline PxTransform ToPxTransform(const FVector& Position, const FVector& PriAxis
     return PxTransform(ToPxVec3(Position), ToPxQuat(RotQuat));
 }
 
+inline FTransform FromPxTransform(const physx::PxTransform& InTransform)
+{
+    const physx::PxVec3& P = InTransform.p;
+    const physx::PxQuat& Q = InTransform.q;
+
+    FVector Position(P.x, P.y, P.z);
+    FQuat Rotation(Q.x, Q.y, Q.z, Q.w);
+
+    return FTransform(Rotation, Position);
+}
