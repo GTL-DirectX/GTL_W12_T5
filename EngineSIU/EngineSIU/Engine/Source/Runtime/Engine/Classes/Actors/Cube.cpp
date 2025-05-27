@@ -6,13 +6,19 @@
 #include "Components/StaticMeshComponent.h"
 
 #include "Engine/FObjLoader.h"
-
 #include "GameFramework/Actor.h"
+
+#include "Physics/BodySetup.h"
 
 ACube::ACube()
 {
     StaticMeshComponent->SetStaticMesh(FObjManager::GetStaticMesh(L"Contents/Reference/Reference.obj"));
 
+    if (!StaticMeshComponent->GetBodySetup())
+    {
+        StaticMeshComponent->GetStaticMesh()->SetBodySetup(FObjectFactory::ConstructObject<UBodySetup>(this));
+        StaticMeshComponent->GetBodySetup()->AddBoxElem(FKBoxElem(0.5f, 0.5f, 0.5f));
+    }
     
 }
 

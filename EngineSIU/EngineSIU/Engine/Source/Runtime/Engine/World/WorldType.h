@@ -1,4 +1,5 @@
 #pragma once
+#include "HAL/PlatformType.h"
 
 enum class EWorldType
 {
@@ -28,7 +29,9 @@ enum class EWorldTypeBitFlag
     GameRPC = 1 << 5,
     SkeletalViewer = 1 << 6,
     ParticleViewer = 1 << 7,
-    Inactive = 1 << 8
+    Inactive = 1 << 8,
+    PhysicsViewer = 1 << 9,
+    SimulationViewer = 1 << 10,
 };
 
 inline EWorldTypeBitFlag operator|(EWorldTypeBitFlag A, EWorldTypeBitFlag B)

@@ -6,6 +6,7 @@
 #include "Template/SubclassOf.h"
 #include "Animation/AnimNodeBase.h"
 
+struct FConstraintInstance;
 class UAnimSequence;
 class USkeletalMesh;
 class FAnimNotifyEvent;
@@ -116,6 +117,9 @@ public:
     EAnimationMode GetAnimationMode() const { return AnimationMode; }
 
     virtual void InitAnim();
+
+    TArray<FBodyInstance*> GetBodies() const { return Bodies; }
+    TArray<FConstraintInstance*> GetConstraints() const { return Constraints; }
     
 protected:
     bool NeedToSpawnAnimScriptInstance() const;
@@ -134,6 +138,9 @@ private:
     static bool bIsCPUSkinning;
 
     void CPUSkinning(bool bForceUpdate = false);
+
+    TArray<FBodyInstance*> Bodies;
+    TArray<FConstraintInstance*> Constraints;
 
 public:
     TSubclassOf<UAnimInstance> AnimClass;

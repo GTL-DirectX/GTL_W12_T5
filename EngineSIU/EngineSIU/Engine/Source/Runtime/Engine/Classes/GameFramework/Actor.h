@@ -143,7 +143,7 @@ public:
     void SetHidden(bool InbHidden) { bHidden = InbHidden; }
 
 private:
-    bool bTickInEditor = false;     // Editor Tick을 수행 여부
+    UPROPERTY(EditAnywhere, bool, bTickInEditor, = false)     // Editor Tick을 수행 여부
 
     bool bHidden = false;
     

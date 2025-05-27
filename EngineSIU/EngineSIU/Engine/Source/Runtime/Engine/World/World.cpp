@@ -16,6 +16,8 @@
 #include "GameFramework/GameMode.h"
 #include "Classes/Components/TextComponent.h"
 #include "Contents/Actors/Fish.h"
+#include "Engine/EditorEngine.h"
+#include "Physics/PhysXManager.h"
 
 class UEditorEngine;
 
@@ -26,6 +28,7 @@ UWorld* UWorld::CreateWorld(UObject* InOuter, const EWorldType InWorldType, cons
     NewWorld->WorldType = InWorldType;
     NewWorld->InitializeNewWorld();
 
+    // Physics Scene 초기화.
     
     return NewWorld;
 }
@@ -34,6 +37,7 @@ void UWorld::InitializeNewWorld()
 {
     ActiveLevel = FObjectFactory::ConstructObject<ULevel>(this);
     ActiveLevel->InitLevel(this);
+    PhysicsScene = FPhysXManager::Get().CreateScene();
     //InitializeLightScene(); // 테스트용 LightScene 비활성화
 
     CollisionManager = new FCollisionManager();
@@ -107,6 +111,8 @@ UObject* UWorld::Duplicate(UObject* InOuter)
     NewWorld->ActiveLevel->InitLevel(NewWorld);
     
     NewWorld->CollisionManager = new FCollisionManager();
+
+    NewWorld->PhysicsScene = FPhysXManager::Get().CreateScene();
     
     return NewWorld;
 }
@@ -114,6 +120,20 @@ UObject* UWorld::Duplicate(UObject* InOuter)
 void UWorld::Tick(float DeltaTime)
 {
     TimeSeconds += DeltaTime;
+    
+    if (PhysicsScene)
+    {
+        PhysicsScene->simulate(DeltaTime);
+        PhysicsScene->fetchResults(true);
+
+        for (auto iter : TObjectRange<UPrimitiveComponent>())
+        {
+            if (iter->GetWorld() == this)
+            {
+                iter->UpdateFromPhysics(DeltaTime);
+            }
+        }
+    }
     
     // SpawnActor()에 의해 Actor가 생성된 경우, 여기서 BeginPlay 호출
     if (WorldType != EWorldType::Editor)
@@ -212,6 +232,12 @@ void UWorld::Release()
     {
         delete CollisionManager;
         CollisionManager = nullptr;
+    }
+
+    if (PhysicsScene)
+    {
+        FPhysXManager::Get().DestroyScene(PhysicsScene);
+        PhysicsScene = nullptr;
     }
     
     GUObjectArray.ProcessPendingDestroyObjects();

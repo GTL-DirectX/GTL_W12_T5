@@ -14,6 +14,7 @@
 #include "Asset/SkeletalMeshAsset.h"
 #include "Asset/StaticMeshAsset.h"
 #include "Particles/ParticleSystem.h"
+#include "Physics/PhysicsAsset.h"
 #include "Serialization/MemoryArchive.h"
 #include "UObject/ObjectFactory.h"
 
@@ -187,6 +188,18 @@ void UAssetManager::LoadContentFiles()
 
             HandleFBX(AssetInfo);
         }
+        else if (Entry.path().extension() == ".physbin")
+        {
+            FAssetInfo AssetInfo = {};
+            AssetInfo.SourceFilePath = Entry.path().generic_string();
+            AssetInfo.PackagePath = FName(Entry.path().parent_path().generic_string());
+            AssetInfo.Size = static_cast<uint32>(std::filesystem::file_size(Entry.path()));
+            AssetInfo.AssetType = EAssetType::PhysicsAsset;
+            AssetInfo.AssetName = FName(Entry.path().filename().generic_string());
+
+            HandlePhysicsAsset(AssetInfo, false);
+        }
+
     }
 
     OutputDebugStringA(std::format("FBX Load Time: {:.2f} s\nBinary Load Time: {:.2f} s", FbxLoadTime / 1000.0, BinaryLoadTime / 1000.0).c_str());
@@ -274,6 +287,59 @@ void UAssetManager::HandleFBX(const FAssetInfo& AssetInfo)
     }
 }
 
+void UAssetManager::HandlePhysicsAsset(const FAssetInfo& AssetInfo, bool bIsSave)
+{
+    // TODO : ControlEditorPanel Viwer Open과 코드 중복 다수
+    // 경로, 이름 준비
+    FString BaseName;
+
+    FWString FilePath = AssetInfo.SourceFilePath.ToWideString();
+    FWString FolderPath = FilePath.substr(0, FilePath.find_last_of(L"\\/") + 1);
+    FWString FileName = FilePath.substr(FilePath.find_last_of(L"\\/") + 1);
+    size_t DotPos = FileName.find_last_of('.');
+    if (DotPos != std::string::npos)
+    {
+        BaseName = FileName.substr(0, DotPos);
+    }
+    else
+    {
+        BaseName = FileName;
+    }
+
+    const FString BinFilePath = FilePath;
+
+    LARGE_INTEGER StartTime;
+    LARGE_INTEGER EndTime;
+    
+    FAssetLoadResult Result;
+        
+    if (bIsSave == false)
+    {
+        
+        
+        QueryPerformanceCounter(&StartTime);
+        
+        // bin 파일 읽기
+        LoadPhysicsAssetBinary(BinFilePath, Result, BaseName, FolderPath);
+        QueryPerformanceCounter(&EndTime);
+        
+        LARGE_INTEGER Frequency;
+        QueryPerformanceFrequency(&Frequency);
+        {
+            BinaryLoadTime += (static_cast<double>(EndTime.QuadPart - StartTime.QuadPart) * 1000.f / static_cast<double>(Frequency.QuadPart));
+        }
+        
+        // 로드된 에셋 등록
+        AddToAssetMap(Result, BaseName, AssetInfo);
+    }
+
+    if (!bIsSave)
+    {
+        // 바이너리 작성
+        SavePhysicsAssetBinary(BinFilePath, Result, BaseName, FolderPath);
+    }
+}
+
 void UAssetManager::AddToAssetMap(const FAssetLoadResult& Result, const FString& BaseName, const FAssetInfo& BaseAssetInfo)
 {
     for (int32 i = 0; i < Result.Skeletons.Num(); ++i)
@@ -350,9 +416,70 @@ void UAssetManager::AddToAssetMap(const FAssetLoadResult& Result, const FString&
 
         AssetMap[EAssetType::Animation].Add(Key, Animation);
     }
+
+    for (int32 i = 0 ; i < Result.PhysicsAssets.Num(); ++i)
+    {
+        UPhysicsAsset* PhysicsAsset = Result.PhysicsAssets[i];
+        FString BaseAssetName = PhysicsAsset->GetName();
+
+        FAssetInfo Info = BaseAssetInfo;
+        Info.AssetName = FName(BaseAssetName);
+        Info.AssetType = EAssetType::PhysicsAsset;
+        
+        FString Key = Info.GetFullPath();
+        AssetRegistry->PathNameToAssetInfo.Add(Key, Info);
+
+        AssetMap[EAssetType::PhysicsAsset].Add(Key, PhysicsAsset);
+    }
 }
 
 bool UAssetManager::LoadFbxBinary(const FString& FilePath, FAssetLoadResult& Result, const FString& BaseName, const FString& FolderPath)
+{
+    std::filesystem::path Path = FilePath.ToWideString();
+
+    TArray<uint8> LoadData;
+    {
+        std::ifstream InputStream{ Path, std::ios::binary | std::ios::ate };
+        if (!InputStream.is_open())
+        {
+            return false;
+        }
+
+        const std::streamsize FileSize = InputStream.tellg();
+        if (FileSize < 0)
+        {
+            // Error getting size
+            InputStream.close();
+            return false;
+        }
+        if (FileSize == 0)
+        {
+            // Empty file is valid
+            InputStream.close();
+            return false; // Buffer remains empty
+        }
+
+        InputStream.seekg(0, std::ios::beg);
+
+        LoadData.SetNum(static_cast<int32>(FileSize));
+        InputStream.read(reinterpret_cast<char*>(LoadData.GetData()), FileSize);
+
+        if (InputStream.fail() || InputStream.gcount() != FileSize)
+        {
+            return false;
+        }
+        InputStream.close();
+    }
+
+    FMemoryReader Reader(LoadData);
+
+    SerializeVersion(Reader);
+    SerializeAssetLoadResult(Reader, Result, BaseName, FolderPath);
+
+    return true;
+}
+
+bool UAssetManager::LoadPhysicsAssetBinary(const FString& FilePath, FAssetLoadResult& Result, const FString& BaseName, const FString& FolderPath)
 {
     std::filesystem::path Path = FilePath.ToWideString();
 
@@ -432,6 +559,40 @@ bool UAssetManager::SaveFbxBinary(const FString& FilePath, FAssetLoadResult& Res
     return true;
 }
 
+bool UAssetManager::SavePhysicsAssetBinary(const FString& FilePath, FAssetLoadResult& Result, const FString& BaseName, const FString& FolderPath)
+{
+    std::filesystem::path Path = FilePath.ToWideString();
+
+    TArray<uint8> SaveData;
+    FMemoryWriter Writer(SaveData);
+
+    SerializeVersion(Writer);
+    bool bSerialized = SerializeAssetLoadResult(Writer, Result, BaseName, FolderPath);
+    if (!bSerialized)
+    {
+        return false;
+    }
+
+    std::ofstream OutputStream{ Path, std::ios::binary | std::ios::trunc };
+    if (!OutputStream.is_open())
+    {
+        return false;
+    }
+
+    if (SaveData.Num() > 0)
+    {
+        OutputStream.write(reinterpret_cast<const char*>(SaveData.GetData()), SaveData.Num());
+
+        if (OutputStream.fail())
+        {
+            return false;
+        }
+    }
+
+    OutputStream.close();
+    return true;
+}
+
 bool UAssetManager::SerializeVersion(FArchive& Ar)
 {
     if (Ar.IsSaving())
@@ -459,6 +620,7 @@ bool UAssetManager::SerializeAssetLoadResult(FArchive& Ar, FAssetLoadResult& Res
     uint8 SkeletalMeshNum = 0;
     uint8 StaticMeshNum = 0;
     uint8 AnimationNum = 0;
+    uint8 PhysicsAssetNum = 0;
 
     if (Ar.IsSaving())
     {
@@ -467,9 +629,10 @@ bool UAssetManager::SerializeAssetLoadResult(FArchive& Ar, FAssetLoadResult& Res
         SkeletalMeshNum = Result.SkeletalMeshes.Num();
         StaticMeshNum = Result.StaticMeshes.Num();
         AnimationNum = Result.Animations.Num();
+        PhysicsAssetNum = Result.PhysicsAssets.Num();
     }
 
-    Ar << MaterialNum << SkeletonNum << SkeletalMeshNum << StaticMeshNum << AnimationNum;
+    Ar << MaterialNum << SkeletonNum << SkeletalMeshNum << StaticMeshNum << AnimationNum /* << PhysicsAssetNum */;
 
     // Load 과정에서 Key를 통해 오브젝트를 찾기 위한 맵
     TMap<FName, USkeleton*> TempSkeletonMap;
@@ -746,6 +909,37 @@ bool UAssetManager::SerializeAssetLoadResult(FArchive& Ar, FAssetLoadResult& Res
         }
 
         Animation->SerializeAsset(Ar);
+    }
+
+    for (int i = 0 ; i < PhysicsAssetNum; ++i)
+    {
+        FAssetInfo Info;
+        if (Ar.IsSaving())
+        {
+            FName Key = FolderPath / (i > 0 ? BaseName + FString::FromInt(i) : BaseName);
+            if (AssetRegistry->PathNameToAssetInfo.Contains(Key))
+            {
+                Info = AssetRegistry->PathNameToAssetInfo[Key];
+            }
+            else
+            {
+                return false;
+            }
+        }
+        Info.Serialize(Ar);
+
+        UPhysicsAsset* PhysicsAsset = nullptr;
+        if (Ar.IsLoading())
+        {
+            PhysicsAsset = FObjectFactory::ConstructObject<UPhysicsAsset>(nullptr, Info.AssetName);
+            Result.PhysicsAssets.Add(PhysicsAsset);
+        }
+        else
+        {
+            PhysicsAsset = Result.PhysicsAssets[i];
+        }
+
+        PhysicsAsset->SerializeAsset(Ar);
     }
 
     return true;

@@ -55,6 +55,19 @@ void FSlateRenderPass::Render(const std::shared_ptr<FEditorViewportClient>& View
     1.0f - (Rect.TopLeftY + Rect.Height * 0.5f) / ClientHeightFloat * 2.0f
         );
     }
+    if (GEngine->ActiveWorld->WorldType == EWorldType::PhysicsViewer or 
+        GEngine->ActiveWorld->WorldType == EWorldType::SimulationViewer)
+    {
+
+        Transform.Scale = FVector2D(
+            1.0f,
+            1.0f
+        );
+        Transform.Offset = FVector2D(
+            0.0f,
+            0.0f
+        );
+    }
     else
     {
         Transform.Scale = FVector2D(
