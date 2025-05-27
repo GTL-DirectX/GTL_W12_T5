@@ -24,7 +24,19 @@ private:
     ID3D11VertexShader* VertexShader = nullptr;
     ID3D11PixelShader* PixelShader = nullptr;
     ID3D11SamplerState* Sampler = nullptr;
+
+    FWString VS_DrawQuadKey = L"VS_DrawQuad";
 private:
+    void CreateShader();
     void UpdateDoFConstant(const std::shared_ptr<FEditorViewportClient>& Viewport);
+private:
+    void PrepareCoCPass(const std::shared_ptr<FEditorViewportClient>& Viewport);
+    void CleanUpCoCPass(const std::shared_ptr<FEditorViewportClient>& Viewport);
+    void PrepareBlurNearPass(const std::shared_ptr<FEditorViewportClient>& Viewport);
+    void CleanUpBlurNearPass(const std::shared_ptr<FEditorViewportClient>& Viewport);
+    void PrepareBlurFarPass(const std::shared_ptr<FEditorViewportClient>& Viewport);
+    void CleanUpBlurFarPass(const std::shared_ptr<FEditorViewportClient>& Viewport);
+    void PrepareCompositePass(const std::shared_ptr<FEditorViewportClient>& Viewport);
+    void CleanUpCompositePass(const std::shared_ptr<FEditorViewportClient>& Viewport);
 };
 

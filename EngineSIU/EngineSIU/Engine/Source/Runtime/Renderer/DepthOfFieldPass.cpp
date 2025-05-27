@@ -9,20 +9,7 @@ void FDepthOfFieldPass::Initialize(FDXDBufferManager* InBufferManager, FGraphics
 {
     FRenderPassBase::Initialize(InBufferManager, InGraphics, InShaderManage);
 
-    HRESULT hr = ShaderManager->AddVertexShader(ShaderKey, L"Shaders/DepthOfFieldShader.hlsl", "mainVS");
-    if (FAILED(hr))
-    {
-        UE_LOG(ELogLevel::Error, TEXT("Failed to create DepthOfFieldVertexShader shader!"));
-    }
-    hr = ShaderManager->AddPixelShader(ShaderKey, L"Shaders/DepthOfFieldShader.hlsl", "mainPS");
-    if (FAILED(hr))
-    {
-        UE_LOG(ELogLevel::Error, TEXT("Failed to create DepthOfFieldPixelShader shader!"));
-    }
-
-    VertexShader = ShaderManager->GetVertexShaderByKey(ShaderKey);
-    PixelShader = ShaderManager->GetPixelShaderByKey(ShaderKey);
-    Sampler = Graphics->GetSamplerState(ESamplerType::LinearClamp);
+    CreateShader();
 }
 
 void FDepthOfFieldPass::PrepareRenderArr()
@@ -84,6 +71,55 @@ void FDepthOfFieldPass::CleanUpRender(const std::shared_ptr<FEditorViewportClien
     Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, NullSRV);
 }
 
+void FDepthOfFieldPass::CreateShader()
+{
+    HRESULT hr = ShaderManager->AddVertexShader(ShaderKey, L"Shaders/DepthOfFieldShader.hlsl", "mainVS");
+    if (FAILED(hr))
+    {
+        UE_LOG(ELogLevel::Error, TEXT("Failed to create DepthOfFieldVertexShader shader!"));
+    }
+    hr = ShaderManager->AddPixelShader(ShaderKey, L"Shaders/DepthOfFieldShader.hlsl", "mainPS");
+    if (FAILED(hr))
+    {
+        UE_LOG(ELogLevel::Error, TEXT("Failed to create DepthOfFieldPixelShader shader!"));
+    }
+
+    VertexShader = ShaderManager->GetVertexShaderByKey(ShaderKey);
+    PixelShader = ShaderManager->GetPixelShaderByKey(ShaderKey);
+    Sampler = Graphics->GetSamplerState(ESamplerType::LinearClamp);
+
+    hr = ShaderManager->AddVertexShader(L"VS_DrawQuad", L"Shaders/DepthOfFieldShader.hlsl", "mainVS");
+    if (FAILED(hr))
+    {
+        UE_LOG(ELogLevel::Error, TEXT("Failed to create DepthOfFieldPixelShader shader!"));
+    }
+
+    hr = ShaderManager->AddPixelShader(L"PS_GenerateCoC", L"Shaders/DepthOfFieldShader.hlsl", "PS_GenerateCoC");
+    if (FAILED(hr))
+    {
+        UE_LOG(ELogLevel::Error, TEXT("Failed to create DepthOfFieldPixelShader shader!"));
+    }
+
+    hr = ShaderManager->AddPixelShader(L"PS_BlurNear", L"Shaders/DepthOfFieldShader.hlsl", "PS_BlurNear");
+    if (FAILED(hr))
+    {
+        UE_LOG(ELogLevel::Error, TEXT("Failed to create DepthOfFieldPixelShader shader!"));
+    }
+
+    hr = ShaderManager->AddPixelShader(L"PS_BlurFar", L"Shaders/DepthOfFieldShader.hlsl", "PS_BlurFar");
+    if (FAILED(hr))
+    {
+        UE_LOG(ELogLevel::Error, TEXT("Failed to create DepthOfFieldPixelShader shader!"));
+    }
+
+    hr = ShaderManager->AddPixelShader(L"PS_Composite", L"Shaders/DepthOfFieldShader.hlsl", "PS_Composite");
+    if (FAILED(hr))
+    {
+        UE_LOG(ELogLevel::Error, TEXT("Failed to create DepthOfFieldPixelShader shader!"));
+    }
+
+}
+
 void FDepthOfFieldPass::UpdateDoFConstant(const std::shared_ptr<FEditorViewportClient>& Viewport)
 {
     FCameraDoFConstants DoFConstants;
@@ -94,4 +130,176 @@ void FDepthOfFieldPass::UpdateDoFConstant(const std::shared_ptr<FEditorViewportC
     FRect ViewportRect = Viewport->GetViewport()->GetRect();
     DoFConstants.ScreenSize = FVector2D(ViewportRect.Width, ViewportRect.Height);
     BufferManager->UpdateConstantBuffer<FCameraDoFConstants>(DoFConstantBufferKey, DoFConstants);
+}
+
+void FDepthOfFieldPass::PrepareCoCPass(const std::shared_ptr<FEditorViewportClient>& Viewport)
+{
+    ID3D11VertexShader* VertexShader = ShaderManager->GetVertexShaderByKey(VS_DrawQuadKey);
+    ID3D11PixelShader* PixelShader = ShaderManager->GetPixelShaderByKey(L"PS_GenerateCoC");
+    Graphics->DeviceContext->VSSetShader(VertexShader, nullptr, 0);
+    Graphics->DeviceContext->PSSetShader(PixelShader, nullptr, 0);
+
+    Graphics->DeviceContext->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+    Graphics->DeviceContext->IASetInputLayout(nullptr);
+    Graphics->DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    Graphics->DeviceContext->RSSetState(Graphics->RasterizerSolidBack);
+
+    Graphics->DeviceContext->PSSetSamplers(0, 1, &Sampler);
+
+    TArray<FString> PSBufferKeys = {
+        TEXT(DoFConstantBufferKey)
+    };
+
+    BufferManager->BindConstantBuffers(PSBufferKeys, 0, EShaderStage::Pixel);
+
+    FViewportResource* ViewportResource = Viewport->GetViewportResource();
+    const EResourceType ResourceType = EResourceType::ERT_DoF_CoC;
+    FRenderTargetRHI* RenderTargetRHI = ViewportResource->GetRenderTarget(ResourceType);
+
+    Graphics->DeviceContext->OMSetDepthStencilState(nullptr, 1);
+    Graphics->DeviceContext->OMSetRenderTargets(1, &RenderTargetRHI->RTV, nullptr);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_SceneDepth), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_Scene)->SRV);
+    
+}
+
+void FDepthOfFieldPass::CleanUpCoCPass(const std::shared_ptr<FEditorViewportClient>& Viewport)
+{
+    Graphics->DeviceContext->OMSetDepthStencilState(Graphics->DepthStencilState_Default, 1);
+    Graphics->DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+
+    ID3D11ShaderResourceView* NullSRV[1] = { nullptr };
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_SceneDepth), 1, NullSRV);
+
+}
+
+void FDepthOfFieldPass::PrepareBlurNearPass(const std::shared_ptr<FEditorViewportClient>& Viewport)
+{
+    ID3D11VertexShader* VertexShader = ShaderManager->GetVertexShaderByKey(VS_DrawQuadKey);
+    ID3D11PixelShader* PixelShader = ShaderManager->GetPixelShaderByKey(L"PS_BlurNear");
+    Graphics->DeviceContext->VSSetShader(VertexShader, nullptr, 0);
+    Graphics->DeviceContext->PSSetShader(PixelShader, nullptr, 0);
+
+    Graphics->DeviceContext->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+    Graphics->DeviceContext->IASetInputLayout(nullptr);
+    Graphics->DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    Graphics->DeviceContext->RSSetState(Graphics->RasterizerSolidBack);
+
+    Graphics->DeviceContext->PSSetSamplers(0, 1, &Sampler);
+
+    TArray<FString> PSBufferKeys = {
+        TEXT(DoFConstantBufferKey)
+    };
+
+    BufferManager->BindConstantBuffers(PSBufferKeys, 0, EShaderStage::Pixel);
+
+    FViewportResource* ViewportResource = Viewport->GetViewportResource();
+    const EResourceType ResourceType = EResourceType::ERT_DoF_BlurNear;
+    FRenderTargetRHI* RenderTargetRHI = ViewportResource->GetRenderTarget(ResourceType);
+
+    Graphics->DeviceContext->OMSetDepthStencilState(nullptr, 1);
+    Graphics->DeviceContext->OMSetRenderTargets(1, &RenderTargetRHI->RTV, nullptr);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_CoC), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_DoF_CoC)->SRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_Scene)->SRV);
+
+}
+
+void FDepthOfFieldPass::CleanUpBlurNearPass(const std::shared_ptr<FEditorViewportClient>& Viewport)
+{
+    Graphics->DeviceContext->OMSetDepthStencilState(Graphics->DepthStencilState_Default, 1);
+    Graphics->DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+
+    ID3D11ShaderResourceView* NullSRV[1] = { nullptr };
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_CoC), 1, NullSRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, NullSRV);
+
+}
+
+void FDepthOfFieldPass::PrepareBlurFarPass(const std::shared_ptr<FEditorViewportClient>& Viewport)
+{
+    ID3D11VertexShader* VertexShader = ShaderManager->GetVertexShaderByKey(VS_DrawQuadKey);
+    ID3D11PixelShader* PixelShader = ShaderManager->GetPixelShaderByKey(L"PS_BlurFar");
+    Graphics->DeviceContext->VSSetShader(VertexShader, nullptr, 0);
+    Graphics->DeviceContext->PSSetShader(PixelShader, nullptr, 0);
+
+    Graphics->DeviceContext->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+    Graphics->DeviceContext->IASetInputLayout(nullptr);
+    Graphics->DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    Graphics->DeviceContext->RSSetState(Graphics->RasterizerSolidBack);
+
+    Graphics->DeviceContext->PSSetSamplers(0, 1, &Sampler);
+
+    TArray<FString> PSBufferKeys = {
+        TEXT(DoFConstantBufferKey)
+    };
+
+    BufferManager->BindConstantBuffers(PSBufferKeys, 0, EShaderStage::Pixel);
+
+    FViewportResource* ViewportResource = Viewport->GetViewportResource();
+    const EResourceType ResourceType = EResourceType::ERT_DoF_BlurFar;
+    FRenderTargetRHI* RenderTargetRHI = ViewportResource->GetRenderTarget(ResourceType);
+
+    Graphics->DeviceContext->OMSetDepthStencilState(nullptr, 1);
+    Graphics->DeviceContext->OMSetRenderTargets(1, &RenderTargetRHI->RTV, nullptr);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_CoC), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_DoF_CoC)->SRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_Scene)->SRV);
+
+
+}
+
+void FDepthOfFieldPass::CleanUpBlurFarPass(const std::shared_ptr<FEditorViewportClient>& Viewport)
+{
+    Graphics->DeviceContext->OMSetDepthStencilState(Graphics->DepthStencilState_Default, 1);
+    Graphics->DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+
+    ID3D11ShaderResourceView* NullSRV[1] = { nullptr };
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_CoC), 1, NullSRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, NullSRV);
+
+}
+
+void FDepthOfFieldPass::PrepareCompositePass(const std::shared_ptr<FEditorViewportClient>& Viewport)
+{
+    ID3D11VertexShader* VertexShader = ShaderManager->GetVertexShaderByKey(VS_DrawQuadKey);
+    ID3D11PixelShader* PixelShader = ShaderManager->GetPixelShaderByKey(L"PS_Composite");
+    Graphics->DeviceContext->VSSetShader(VertexShader, nullptr, 0);
+    Graphics->DeviceContext->PSSetShader(PixelShader, nullptr, 0);
+
+    Graphics->DeviceContext->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+    Graphics->DeviceContext->IASetInputLayout(nullptr);
+    Graphics->DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    Graphics->DeviceContext->RSSetState(Graphics->RasterizerSolidBack);
+
+    Graphics->DeviceContext->PSSetSamplers(0, 1, &Sampler);
+
+    TArray<FString> PSBufferKeys = {
+        TEXT(DoFConstantBufferKey)
+    };
+
+    BufferManager->BindConstantBuffers(PSBufferKeys, 0, EShaderStage::Pixel);
+
+    FViewportResource* ViewportResource = Viewport->GetViewportResource();
+    const EResourceType ResourceType = EResourceType::ERT_DoF_Result;
+    FRenderTargetRHI* RenderTargetRHI = ViewportResource->GetRenderTarget(ResourceType);
+
+    Graphics->DeviceContext->OMSetDepthStencilState(nullptr, 1);
+    Graphics->DeviceContext->OMSetRenderTargets(1, &RenderTargetRHI->RTV, nullptr);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_CoC), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_DoF_CoC)->SRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_Scene)->SRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_BlurNear), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_DoF_BlurNear)->SRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_BlurFar), 1, &ViewportResource->GetDepthStencil(EResourceType::ERT_DoF_BlurFar)->SRV);
+
+
+}
+
+void FDepthOfFieldPass::CleanUpCompositePass(const std::shared_ptr<FEditorViewportClient>& Viewport)
+{
+    Graphics->DeviceContext->OMSetDepthStencilState(Graphics->DepthStencilState_Default, 1);
+    Graphics->DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+
+    ID3D11ShaderResourceView* NullSRV[1] = { nullptr };
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_CoC), 1,NullSRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, NullSRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_BlurNear), 1, NullSRV);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_BlurFar), 1, NullSRV);
+
 }
