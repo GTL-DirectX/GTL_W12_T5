@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "BodySetup.h"
 #include "UObject/Object.h"
@@ -8,6 +8,8 @@
 
 class UBodySetup;
 class UPhysicsConstraintTemplate;
+struct FBodyInstance;
+struct FConstraintInstance;
 
 class USkeletalBodySetup : public UBodySetup
 {
@@ -39,9 +41,10 @@ public:
     TArray<UPhysicsConstraintTemplate*> ConstraintTemplates;
 
     /** This caches the BodySetup Index by BodyName to speed up FindBodyIndex */
-    TMap<FName, int32>					BodySetupIndexMap;
+    TMap<FName, int32> BodySetupIndexMap;
 
     virtual void SerializeAsset(FArchive& Ar) override;
 
+    void CreatePhysicsInstance(class UWorld* World, class USkeletalMeshComponent* SkeletalMeshComponent, TArray<FBodyInstance*>& OutBodies, TArray<FConstraintInstance*>& OutConstraints);
 
 };

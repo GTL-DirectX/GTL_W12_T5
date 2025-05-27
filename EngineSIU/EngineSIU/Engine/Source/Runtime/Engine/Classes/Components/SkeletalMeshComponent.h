@@ -32,6 +32,8 @@ public:
 
     virtual UObject* Duplicate(UObject* InOuter) override;
 
+    virtual void BeginPlay() override;
+
     virtual void TickComponent(float DeltaTime) override;
 
     virtual void TickPose(float DeltaTime) override;
@@ -140,9 +142,16 @@ private:
 
     void CPUSkinning(bool bForceUpdate = false);
 
+    // Physics 관련.
+private:
+    void InitPhysicsBodies();
+
+private:
     TArray<FBodyInstance*> Bodies;
     TArray<FConstraintInstance*> Constraints;
 
+
+    // 애니메이션 관련.
 public:
     TSubclassOf<UAnimInstance> AnimClass;
     

@@ -6,6 +6,7 @@
 #include "Animation/Skeleton.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/Asset/SkeletalMeshAsset.h"
+#include "Physics/PhysicsAsset.h"
 #include "Misc/FrameTime.h"
 #include "Animation/AnimSingleNodeInstance.h"
 #include "Animation/AnimTypes.h"
@@ -54,6 +55,13 @@ UObject* USkeletalMeshComponent::Duplicate(UObject* InOuter)
     NewComponent->SetLooping(this->IsLooping());
     NewComponent->SetPlaying(this->IsPlaying());
     return NewComponent;
+}
+
+void USkeletalMeshComponent::BeginPlay()
+{
+    Super::BeginPlay();
+
+    InitPhysicsBodies();
 }
 
 void USkeletalMeshComponent::TickComponent(float DeltaTime)
@@ -440,6 +448,19 @@ void USkeletalMeshComponent::CPUSkinning(bool bForceUpdate)
              CPURenderData->Vertices[i].NormalZ = SkinnedNormal.Z;
            }
      }
+}
+
+void USkeletalMeshComponent::InitPhysicsBodies()
+{
+    if (!SkeletalMeshAsset || !SkeletalMeshAsset->PhysicsAsset)
+    {
+        return;
+    }
+
+    Bodies.Empty();
+    Constraints.Empty();
+
+    SkeletalMeshAsset->PhysicsAsset->CreatePhysicsInstance(GetWorld(), this, Bodies, Constraints);
 }
 
 UAnimSingleNodeInstance* USkeletalMeshComponent::GetSingleNodeInstance() const

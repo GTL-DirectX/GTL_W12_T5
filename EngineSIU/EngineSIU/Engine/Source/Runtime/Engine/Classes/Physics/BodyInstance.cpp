@@ -60,6 +60,10 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
         return;
     }
 
+    PxFilterData FilterData;
+    FilterData.word0 = Owner->GetUUID();
+    FilterData.word1 = 0xFFFF;
+
     for (const FKBoxElem& BoxElem : AggGeom.BoxElems)
     {
         PxBoxGeometry BoxGeom(BoxElem.X, BoxElem.Y, BoxElem.Z);
@@ -73,8 +77,9 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
         PxTransform BoxLocalPose = ToPxTransform(BoxLoaclTM);
 
         Shape->setLocalPose(BoxLocalPose);
-        PxRigidActor->attachShape(*Shape);
+        Shape->setSimulationFilterData(FilterData);
 
+        PxRigidActor->attachShape(*Shape);
         Shape->release();
     }
 
@@ -89,6 +94,8 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
         FTransform SphereLocalTM = SphereElem.GetTransform();
         PxTransform SphereLocalPose = ToPxTransform(SphereLocalTM);
         Shape->setLocalPose(SphereLocalPose);
+        Shape->setSimulationFilterData(FilterData);
+
         PxRigidActor->attachShape(*Shape);
         Shape->release();
     }
@@ -104,11 +111,16 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
         FTransform SphylLocalTM = SphylElem.GetTransform();
         PxTransform SphylLocalPose = ToPxTransform(SphylLocalTM);
         Shape->setLocalPose(SphylLocalPose);
+        Shape->setSimulationFilterData(FilterData);
+
         PxRigidActor->attachShape(*Shape);
         Shape->release();
     }
 
-
+    for (const FKConvexElem& ConvexElem : AggGeom.ConvexElems)
+    {
+        // Convex 내용 추가.
+    }
 
     if (Owner->PhysicsBodyType == EPhysicsBodyType::Dynamic && RigidBody)
     {

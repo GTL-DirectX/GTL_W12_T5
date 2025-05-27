@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <unordered_map>
 
 #include "ContainerAllocator.h"
@@ -163,6 +163,16 @@ public:
             return *Value;
         }
         return Emplace(Key);
+    }
+
+    InValueType FindRef(const KeyType& Key) const
+    {
+        auto it = ContainerPrivate.find(Key);
+        if (it != ContainerPrivate.end())
+        {
+            return it->second;
+        }
+        return InValueType{}; // 기본값 반환
     }
 
     // 크기 관련

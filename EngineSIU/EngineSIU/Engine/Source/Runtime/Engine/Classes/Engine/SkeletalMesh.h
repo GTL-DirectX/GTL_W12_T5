@@ -25,7 +25,7 @@ public:
     void CreateOrBindPhysicsAsset();
 
     class UPhysicsAsset* PhysicsAsset = nullptr;
-
+  
 protected:
     std::unique_ptr<FSkeletalMeshRenderData> RenderData;
 

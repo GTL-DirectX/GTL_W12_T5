@@ -32,6 +32,7 @@ struct FBodyInstance : public FBodyInstanceCore
     DECLARE_STRUCT(FBodyInstance, FBodyInstanceCore)
 
     int32 InstanceBodyIndex = INDEX_NONE;
+    uint32 ComponentId = 0; // Unique ID for the component this body instance is associated with.
 
     PxRigidDynamic* RigidBody = nullptr;
     PxRigidActor* PxRigidActor = nullptr; // Pointer to the PhysX rigid actor that this instance is associated with
