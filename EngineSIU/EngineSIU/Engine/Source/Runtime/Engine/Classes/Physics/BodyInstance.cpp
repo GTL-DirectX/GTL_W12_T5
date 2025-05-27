@@ -78,6 +78,38 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
         Shape->release();
     }
 
+    for (const FKSphereElem& SphereElem : AggGeom.SphereElems)
+    {
+        PxSphereGeometry SphereGeom(SphereElem.Radius);
+        PxShape* Shape = Physics->createShape(SphereGeom, *Material);
+        if (!Shape)
+        {
+            continue;
+        }
+        FTransform SphereLocalTM = SphereElem.GetTransform();
+        PxTransform SphereLocalPose = ToPxTransform(SphereLocalTM);
+        Shape->setLocalPose(SphereLocalPose);
+        PxRigidActor->attachShape(*Shape);
+        Shape->release();
+    }
+
+    for (const FKSphylElem& SphylElem : AggGeom.SphylElems)
+    {
+        PxCapsuleGeometry CapsuleGeom(SphylElem.Radius, SphylElem.Length * 0.5f);
+        PxShape* Shape = Physics->createShape(CapsuleGeom, *Material);
+        if (!Shape)
+        {
+            continue;
+        }
+        FTransform SphylLocalTM = SphylElem.GetTransform();
+        PxTransform SphylLocalPose = ToPxTransform(SphylLocalTM);
+        Shape->setLocalPose(SphylLocalPose);
+        PxRigidActor->attachShape(*Shape);
+        Shape->release();
+    }
+
+
+
     if (Owner->PhysicsBodyType == EPhysicsBodyType::Dynamic && RigidBody)
     {
         PxRigidBodyExt::updateMassAndInertia(*RigidBody, BodySetup->MassInKg > 0 ? BodySetup->MassInKg : 1.0f);

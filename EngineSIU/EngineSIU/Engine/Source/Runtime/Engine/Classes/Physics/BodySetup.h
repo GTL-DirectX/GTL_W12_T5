@@ -38,6 +38,7 @@ public:
 
     // TODO: 테스트용 하드코딩 함수. 제거할 것.
     void AddBoxElem(const FKBoxElem& BoxElem) { AggGeom.BoxElems.Add(BoxElem); }
+    void AddSphereElem(const FKSphereElem& SphereElem) { AggGeom.SphereElems.Add(SphereElem); }
 
     UPhysicalMaterial* PhysicalMaterial = nullptr;
 
