@@ -162,6 +162,16 @@ void FGraphicsDevice::CreateDepthStencilState()
         // 오류 처리
         return;
     }
+
+    DepthStencilStateDesc.DepthEnable = FALSE;                     // 테스트 OFF
+    DepthStencilStateDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;   // (옵션) 테스트 무조건 통과
+    DepthStencilStateDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 쓰기 OFF
+    hr = Device->CreateDepthStencilState(&DepthStencilStateDesc, &DepthStencilState_DepthTestDisabled);
+    if (FAILED(hr))
+    {
+        // 오류 처리
+        return;
+    }
 }
 
 void FGraphicsDevice::CreateRasterizerState()
