@@ -110,15 +110,7 @@ public:
     UPROPERTY(EditAnywhere, float, RestOffset, = 0.0f)
 
 protected:
-    void CloneElem(const FKShapeElem& Other)
-    {
-        RestOffset = Other.RestOffset;
-        ShapeType = Other.ShapeType;
-        Name = Other.Name;
-        bContributeToMass = Other.bContributeToMass;
-        CollisionEnabled = Other.CollisionEnabled;
-        bIsGenerated = Other.bIsGenerated;
-    }
+    void CloneElem(const FKShapeElem& Other);
 
 private:
     // 사용자 지정 이름.

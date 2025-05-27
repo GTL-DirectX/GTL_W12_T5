@@ -1,13 +1,7 @@
 #include "Cube.h"
 
-#include "Components/BoxComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
-
 #include "Engine/FObjLoader.h"
-#include "GameFramework/Actor.h"
-
 #include "Physics/BodySetup.h"
 
 ACube::ACube()
