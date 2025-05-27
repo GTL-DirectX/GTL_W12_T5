@@ -305,21 +305,21 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
         ImGui::Spacing();
 
         ImGui::Text("Focal Length");
-        float FocalLength= GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocalLength;
+        float FocalLength= GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocalLength_mm;
         ImGui::SetNextItemWidth(120.0f);
         if (ImGui::DragFloat("##FocalLength", &FocalLength, 1.f, 4.f, 1000.0f, "%.1f"))
         {
-            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocalLength = FocalLength;
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocalLength_mm = FocalLength;
         }
 
         ImGui::Spacing();
 
-        ImGui::Text("Aperture");
-        float Aperture = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->Aperture;
+        ImGui::Text("F_Stop");
+        float F_Stop = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->F_Stop;
         ImGui::SetNextItemWidth(120.0f);
-        if (ImGui::DragFloat("##Aperture", &Aperture, 0.1f, 1.0f, 22.0f, "%.1f"))
+        if (ImGui::DragFloat("##F_Stop", &F_Stop, 0.1f, 1.0f, 22.0f, "%.1f"))
         {
-            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->Aperture = Aperture;
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->F_Stop = F_Stop;
         }
 
         ImGui::Spacing();
@@ -334,12 +334,22 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
 
         ImGui::Spacing();
 
+        ImGui::Text("SensroWidth_mm");
+        float SensorWidth_mm = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->SensorWidth_mm;
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::DragFloat("##SensroWidth_mm", &SensorWidth_mm, 1.0f, 1.0f, 100.0f, "%.1f"))
+        {
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->SensorWidth_mm = SensorWidth_mm;
+        }
+
+        ImGui::Spacing();
+
         ImGui::Text("Max CoC");
-        float MaxCoC = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->MaxCoC;
+        float MaxCoC = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->CoCScaleFactor;
         ImGui::SetNextItemWidth(120.0f);
         if (ImGui::DragFloat("##MaxCoC", &MaxCoC, 1.0f, 1.0f, 100.0f, "%.1f"))
         {
-            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->MaxCoC = MaxCoC;
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->CoCScaleFactor = MaxCoC;
         }
 
         ImGui::Separator();

@@ -107,6 +107,12 @@ void FDepthOfFieldPass::CreateShader()
 void FDepthOfFieldPass::UpdateDoFConstant(const std::shared_ptr<FEditorViewportClient>& Viewport)
 {
     FDepthOfFieldConstant DoFConstants;
+    DoFConstants.F_Stop = Viewport->F_Stop;
+    DoFConstants.FocalLength_mm = Viewport->FocalLength_mm;
+    DoFConstants.FocalDistance_World = Viewport->FocusDistance;
+    DoFConstants.CoCScaleFactor = Viewport->CoCScaleFactor;
+    DoFConstants.SensorWidth_mm = Viewport->SensorWidth_mm;
+    DoFConstants.MaxBokehRadius = 4.0f;
     FRect ViewportRect = Viewport->GetViewport()->GetRect();
     DoFConstants.ScreenSize = FVector2D(ViewportRect.Width, ViewportRect.Height);
     BufferManager->UpdateConstantBuffer<FDepthOfFieldConstant>(DoFConstantBufferKey, DoFConstants);

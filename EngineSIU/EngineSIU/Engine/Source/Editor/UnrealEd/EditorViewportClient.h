@@ -119,10 +119,11 @@ protected:
     void GetViewInfo(FMinimalViewInfo& OutViewInfo) const;
 
 public:
-    float FocalLength = 100.0f; // 카메라의 초점 거리
-    float Aperture = 1.0f; // 카메라의 조리개 값
+    float FocalLength_mm = 100.0f; // 카메라의 초점 거리
+    float F_Stop = 1.0f; // 카메라의 조리개 값
     float FocusDistance = 1000.0f; // 카메라의 초점 거리
-    float MaxCoC = 4.0f; // 최대 CoC (Circle of Confusion) 값
+    float SensorWidth_mm = 36.0f; // 카메라 센서 너비 (mm 단위)
+    float CoCScaleFactor = 4.0f; // 최대 CoC (Circle of Confusion) 값
 public:
     FViewport* Viewport;
     int32 ViewportIndex;
