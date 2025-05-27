@@ -28,12 +28,12 @@ void UStaticMeshComponent::BeginPlay()
 
     if (UStaticMesh* Mesh = GetStaticMesh())
     {
-        // TODO: Test Setup 생성. 추후 Load 시 StaticMesh에 BodySetup이 없으면 생성하도록 변경
-        if (Mesh->GetBodySetup() == nullptr)
-        {
-            Mesh->SetBodySetup(FObjectFactory::ConstructObject<UBodySetup>(this));
-            Mesh->GetBodySetup()->AddBoxElem(FKBoxElem(50.0f, 50.0f, 50.0f));
-        }
+        //// TODO: Test Setup 생성. 추후 Load 시 StaticMesh에 BodySetup이 없으면 생성하도록 변경
+        //if (Mesh->GetBodySetup() == nullptr)
+        //{
+        //    Mesh->SetBodySetup(FObjectFactory::ConstructObject<UBodySetup>(this));
+        //    Mesh->GetBodySetup()->AddBoxElem(FKBoxElem(50.0f, 50.0f, 50.0f));
+        //}
         
         if (UBodySetup* BodySetup = GetBodySetup())
         {

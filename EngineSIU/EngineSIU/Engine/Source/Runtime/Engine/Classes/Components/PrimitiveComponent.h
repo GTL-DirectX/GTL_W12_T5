@@ -8,6 +8,13 @@ DECLARE_MULTICAST_DELEGATE_FiveParams(FComponentHitSignature, UPrimitiveComponen
 DECLARE_MULTICAST_DELEGATE_SixParams(FComponentBeginOverlapSignature, UPrimitiveComponent* /* OverlappedComponent */, AActor* /* OtherActor */, UPrimitiveComponent* /* OtherComp */, int32 /* OtherBodyIndex */, bool /* bFromSweep */, const FHitResult& /* Hit */);
 DECLARE_MULTICAST_DELEGATE_FourParams(FComponentEndOverlapSignature, UPrimitiveComponent* /* OverlappedComponent */, AActor* /* OtherActor */, UPrimitiveComponent* /* OtherComp */, int32 /* OtherBodyIndex */);
 
+enum class EPhysicsBodyType : uint8
+{
+    Static = 0,   // Static body, does not move
+    Dynamic,        // Dynamic body, responds to forces and collisions
+    Kinematic     // Kinematic body, moves but does not respond to forces
+};
+
 class UPrimitiveComponent : public USceneComponent
 {
     DECLARE_CLASS(UPrimitiveComponent, USceneComponent)
@@ -124,8 +131,10 @@ public:
 public:
     FBodyInstance BodyInstance;
 
-protected:
-    void SyncPhysics(float DeltaTime);
+public:
+    void UpdateFromPhysics(float DeltaTime);
+
+    UPROPERTY(EditAnywhere, EPhysicsBodyType, PhysicsBodyType, = EPhysicsBodyType::Static) // Default to static body
     
 };
 

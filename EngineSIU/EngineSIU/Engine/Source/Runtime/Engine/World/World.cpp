@@ -125,6 +125,14 @@ void UWorld::Tick(float DeltaTime)
     {
         PhysicsScene->simulate(DeltaTime);
         PhysicsScene->fetchResults(true);
+
+        for (auto iter : TObjectRange<UPrimitiveComponent>())
+        {
+            if (iter->GetWorld() == this)
+            {
+                iter->UpdateFromPhysics(DeltaTime);
+            }
+        }
     }
     
     // SpawnActor()에 의해 Actor가 생성된 경우, 여기서 BeginPlay 호출
@@ -136,7 +144,6 @@ void UWorld::Tick(float DeltaTime)
         }
         PendingBeginPlayActors.Empty();
     }
-
 }
 
 void UWorld::BeginPlay()

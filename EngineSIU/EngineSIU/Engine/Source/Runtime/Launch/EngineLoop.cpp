@@ -170,6 +170,7 @@ void FEngineLoop::Tick()
 
         GEngine->Tick(DeltaTime);
         LevelEditor->Tick(DeltaTime);
+
         Render();
         UIManager->BeginFrame();
         UnrealEditor->Render();

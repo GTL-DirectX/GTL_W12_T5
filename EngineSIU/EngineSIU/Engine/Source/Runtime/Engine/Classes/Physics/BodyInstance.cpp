@@ -27,13 +27,26 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
         return; // No shapes to create
     }
 
-    const FTransform WorldTM = Owner->GetComponentToWorld();
+    const FTransform WorldTM = Owner->GetComponentTransform();
     const PxTransform PxTM = ToPxTransform(WorldTM);
 
-    RigidBody = Physics->createRigidDynamic(PxTM);
-    if (!RigidBody)
+    if (Owner->PhysicsBodyType == EPhysicsBodyType::Static)
     {
-        UE_LOG(ELogLevel::Warning, TEXT("Failed to create PxRigidDynamic for BodyInstance."));
+        PxRigidActor = Physics->createRigidStatic(PxTM);
+    }
+    else
+    {
+        RigidBody = Physics->createRigidDynamic(PxTM);
+        if (Owner->PhysicsBodyType == EPhysicsBodyType::Kinematic && RigidBody)
+        {
+            RigidBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, Owner->PhysicsBodyType == EPhysicsBodyType::Kinematic);
+        }
+        PxRigidActor = RigidBody;
+    }
+
+    if (!PxRigidActor)
+    {
+        UE_LOG(ELogLevel::Warning, TEXT("Failed to create PxRigidActor for BodyInstance."));
         return;
     }
     
@@ -60,18 +73,17 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
         PxTransform BoxLocalPose = ToPxTransform(BoxLoaclTM);
 
         Shape->setLocalPose(BoxLocalPose);
-        RigidBody->attachShape(*Shape);
+        PxRigidActor->attachShape(*Shape);
 
         Shape->release();
     }
 
-    PxRigidBodyExt::updateMassAndInertia(*RigidBody, BodySetup->MassInKg > 0 ? 
-        BodySetup->MassInKg : 1.0f);
+    if (Owner->PhysicsBodyType == EPhysicsBodyType::Dynamic && RigidBody)
+    {
+        PxRigidBodyExt::updateMassAndInertia(*RigidBody, BodySetup->MassInKg > 0 ? BodySetup->MassInKg : 1.0f);
+    }
 
-    Scene->addActor(*RigidBody);
-
-    PxRigidActor = RigidBody;
-    // PxScene = Scene;
+    Scene->addActor(*PxRigidActor);
     bInitialized = true;
 }
 
@@ -86,4 +98,43 @@ void FBodyInstance::UpdateComponentTransform(class UPrimitiveComponent* Owner, f
     const FTransform WorldTM = FromPxTransform(PxTM);
     Owner->SetWorldTransform(WorldTM);
     
+}
+
+void FBodyInstance::SetBodyTransform(const FTransform& NewTransform, bool bTeleport)
+{
+    if (!PxRigidActor)
+    {
+        return;
+    }
+
+    const PxTransform PxTM = ToPxTransform(NewTransform);
+
+    if (PxRigidDynamic* Dynamic = PxRigidActor->is<PxRigidDynamic>())
+    {
+        if (Dynamic->getRigidBodyFlags() & PxRigidBodyFlag::eKINEMATIC)
+        {
+            if (bTeleport)
+            {
+                Dynamic->setGlobalPose(PxTM);
+            }
+            else
+            {
+                Dynamic->setKinematicTarget(PxTM);
+            }
+        }
+    }
+    else
+    {
+        PxRigidActor->setGlobalPose(PxTM);
+    }
+}
+
+FTransform FBodyInstance::GetBodyTransform() const
+{
+    if (!PxRigidActor)
+    {
+        return FTransform::Identity;
+    }
+    const PxTransform PxTM = PxRigidActor->getGlobalPose();
+    return FromPxTransform(PxTM);
 }

@@ -64,7 +64,7 @@ struct FBodyInstance : public FBodyInstanceCore
     FVector GetAngularVelocity() const;
 
     // Transform 갱신
-    void SetBodyTransform(const FTransform& NewTransform);
+    void SetBodyTransform(const FTransform& NewTransform, bool bTeleport = true);
     FTransform GetBodyTransform() const;
 
     // 종료
