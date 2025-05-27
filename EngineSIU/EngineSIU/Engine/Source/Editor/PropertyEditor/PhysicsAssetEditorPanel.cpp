@@ -9,6 +9,7 @@
 #include "Physics/ConstraintInstance.h"
 #include "Physics/PhysicsAsset.h"
 #include "Physics/PhysicsConstraintTemplate.h"
+#include "UnrealEd/ImGuiWidget.h"
 
 PhysicsAssetEditorPanel::PhysicsAssetEditorPanel()
 {
@@ -198,10 +199,7 @@ void PhysicsAssetEditorPanel::RenderDetailsPanel()
     if (SelectedBodySetup)
     {
         ImGui::SeparatorText(*FString::Printf(TEXT("Body Setup: %s"), *SelectedBodySetup->BoneName.ToString()));
-        RenderObjectDetails(SelectedBodySetup);
-
-        // FKBoxElem Box = FKBoxElem();
-        // SelectedBodySetup->GetAggGeom().BoxElems.Add(Box); // 예시로 BoxElem 추가
+        RenderObjectDetails(SelectedBodySetup); // UBodySetup (및 USkeletalBodySetup)의 프로퍼티 표시
     }
     else if (SelectedConstraintTemplate)
     {

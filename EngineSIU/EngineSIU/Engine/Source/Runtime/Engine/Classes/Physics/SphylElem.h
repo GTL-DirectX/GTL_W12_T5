@@ -7,10 +7,25 @@ struct FKSphylElem : public FKShapeElem
 {
     DECLARE_STRUCT(FKSphylElem, FKShapeElem)
 
-    FVector Center = FVector::ZeroVector; // 중심 위치
-    FRotator Rotation = FRotator::ZeroRotator; // 회전
-    float Radius = 0.0f; // 반지름
-    float Length = 0.0f; // 길이
+        UPROPERTY(
+    EditAnywhere,
+    FVector, Center, = FVector::ZeroVector;
+    )   
+
+        UPROPERTY(
+    EditAnywhere,
+    FRotator, Rotation, = FRotator::ZeroRotator;
+    )
+
+    UPROPERTY(
+    EditAnywhere,
+    float, Radius, = 0.5f;
+    )
+    
+    UPROPERTY(
+    EditAnywhere,
+    float, Length, = 0.5f;
+    )   
 
     FKSphylElem()
         : FKShapeElem(EAggCollisionShape::Sphyl)

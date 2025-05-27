@@ -6,8 +6,15 @@ struct FKSphereElem : public FKShapeElem
 {
     DECLARE_STRUCT(FKSphereElem, FKShapeElem)
 
-    FVector Center = FVector::ZeroVector; // Sphere center in local space
-    float Radius = 0.5f; // Sphere radius
+    UPROPERTY(
+    EditAnywhere,
+    FVector, Center, = FVector::ZeroVector;
+    )   
+
+    UPROPERTY(
+    EditAnywhere,
+    float, Radius, = 0.5f;
+    )   
     
     FTransform GetTransform() const
     {

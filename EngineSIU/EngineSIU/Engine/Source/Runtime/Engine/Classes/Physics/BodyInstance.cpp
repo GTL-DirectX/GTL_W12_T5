@@ -18,7 +18,7 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
     if (!Physics)
         return;
 
-    const FKAggregateGeom& AggGeom = BodySetup->GetAggGeom();
+    const FKAggregateGeom& AggGeom = BodySetup->AggGeom;
     if (AggGeom.BoxElems.Num() == 0 && 
         AggGeom.SphereElems.Num() == 0 &&
         AggGeom.SphylElems.Num() == 0 &&
