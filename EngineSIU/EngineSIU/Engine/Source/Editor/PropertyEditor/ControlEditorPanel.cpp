@@ -231,6 +231,15 @@ void ControlEditorPanel::CreateMenuButton(const ImVec2 ButtonSize, ImFont* IconF
 
         tinyfd_messageBox("알림", "저장되었습니다.", "ok", "info", 1);
     }
+    
+    ImGui::Separator();
+    if (ImGui::MenuItem("Physics Simulation"))
+    {
+        if (UEditorEngine* EditorEngine = Cast<UEditorEngine>(GEngine))
+        {
+            EditorEngine->StartPhysicsViewer("Contents/Human/Human");
+        }
+    }
 
     ImGui::Separator();
 

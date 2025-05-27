@@ -37,7 +37,7 @@ public:
 
     void StartPIE();
     void StartSkeletalMeshViewer(FName SkeletalMeshName, UAnimationAsset* AnimAsset);
-    void StartSimulationViewer(FName SimulationName);
+    void StartSimulationViewer();
     void StartParticleViewer(FName ParticleName, UParticleSystem* ParticleSystem);
     void StartPhysicsViewer(FName SkeletalMeshName);
 

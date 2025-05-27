@@ -155,6 +155,8 @@ UObject* UPrimitiveComponent::Duplicate(UObject* InOuter)
     ThisClass* NewComponent = Cast<ThisClass>(Super::Duplicate(InOuter));
 
     NewComponent->AABB = AABB;
+    NewComponent->PhysicsBodyType = PhysicsBodyType;
+    NewComponent->BodyInstance = BodyInstance;
 
     return NewComponent;
 }
@@ -181,6 +183,7 @@ void UPrimitiveComponent::InitializeComponent()
 void UPrimitiveComponent::TickComponent(float DeltaTime)
 {
     Super::TickComponent(DeltaTime);
+
 }
 
 bool UPrimitiveComponent::IntersectRayTriangle(const FVector& RayOrigin, const FVector& RayDirection, const FVector& v0, const FVector& v1, const FVector& v2, float& OutHitDistance) const
@@ -625,5 +628,13 @@ void UPrimitiveComponent::ClearComponentOverlaps(bool bDoNotifies, bool bSkipNot
         {
             EndComponentOverlap(OtherOverlap, bDoNotifies, bSkipNotifySelf);
         }
+    }
+}
+
+void UPrimitiveComponent::UpdateFromPhysics(float DeltaTime)
+{
+    if (BodyInstance.bInitialized)
+    {
+        BodyInstance.UpdateComponentTransform(this, DeltaTime);
     }
 }

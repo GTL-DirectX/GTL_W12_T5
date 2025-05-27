@@ -1679,12 +1679,17 @@
     <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Particles\SubUV\ParticleModuleSubUV.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Particles\SubUV\ParticleModuleSUbUVBase.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Particles\Velocity\ParticleModuleVelocityBase.cpp" />
+    <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\BodyInstance.cpp" />
+    <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\BodySetup.cpp" />
+    <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\ConstraintInstance.cpp" />
+    <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\PhysicsConstraintTemplate.cpp" />
+    <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\PhysXManager.cpp" />
+    <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\PhysicalMaterial.cpp" />
+    <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\PhysicsAsset.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\ParticleEmitterInstance.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\ParticleHelper.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Particles\ParticleSystemRender.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\World\ParticleViewerWorld.cpp" />
-    <ClCompile Include="Engine\Source\Runtime\Engine\World\PhysicsViewerWorld.cpp" />
-    <ClCompile Include="Engine\Source\Runtime\Engine\World\SimulationViewrWorld.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Renderer\ParticleMeshRenderPass.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Renderer\ParticleSpriteRenderPass.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Renderer\RenderPassBase.cpp" />
@@ -1696,6 +1701,7 @@
     <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Particles\Velocity\ParticleModuleVelocityOverLife.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Particles\Acceleration\ParticleModuleAcceleration.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Particles\Acceleration\ParticleModuleAccelerationBase.cpp" />
+    <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\KAggregateGeom.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Renderer\DepthOfFieldPass.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -1784,11 +1790,24 @@
     <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Particles\SubUV\ParticleModuleSubUV.h" />
     <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Particles\SubUV\ParticleModuleSUbUVBase.h" />
     <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Particles\Velocity\ParticleModuleVelocityBase.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Physics\AggregateGeom.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Physics\BodyInstance.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Physics\BodySetup.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Physics\BoxElem.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Physics\ConstraintInstance.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Physics\ConvexElem.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Physics\PhysicsConstraintTemplate.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Physics\PhysXManager.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Physics\PhysicalMaterial.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Physics\PhysicsAsset.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Physics\PhysicsAssetUtils.cpp" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Physics\PhysicsAssetUtils.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Physics\ShapeElem.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Physics\SphereElem.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Physics\SphylElem.h" />
     <ClInclude Include="Engine\Source\Runtime\Engine\ParticleEmitterInstance.h" />
     <ClInclude Include="Engine\Source\Runtime\Engine\ParticleHelper.h" />
     <ClInclude Include="Engine\Source\Runtime\Engine\World\ParticleViewerWorld.h" />
-    <ClInclude Include="Engine\Source\Runtime\Engine\World\PhysicsViewerWorld.h" />
-    <ClInclude Include="Engine\Source\Runtime\Engine\World\SimulationViewrWorld.h" />
     <ClInclude Include="Engine\Source\Runtime\Renderer\ParticleMeshRenderPass.h" />
     <ClInclude Include="Engine\Source\Runtime\Renderer\ParticleSpriteRenderPass.h" />
     <ClInclude Include="Engine\Source\Runtime\Renderer\RenderPassBase.h" />

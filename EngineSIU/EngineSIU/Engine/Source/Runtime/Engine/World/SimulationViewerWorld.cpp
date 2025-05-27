@@ -1,4 +1,4 @@
-#include "SimulationViewrWorld.h"
+#include "SimulationViewerWorld.h"
 
 USimulationViewerWorld* USimulationViewerWorld::CreateWorld(UObject* InOuter, const EWorldType InWorldType, const FString& InWorldName)
 {

@@ -13,8 +13,7 @@ struct FTransform
     
     // 기존 생성자들
     FTransform();
-    FTransform(const FQuat& InRotation, const FVector& InTranslation, const FVector& InScale3D = FVector(1.0f, 1.0f, 1.0f));
-    FTransform(const FRotator& InRotation, const FVector& InTranslation, const FVector& InScale3D = FVector(1.0f, 1.0f, 1.0f));
+    FTransform(const FQuat& InRotation, const FVector& InTranslation, const FVector& InScale3D = FVector(1.0f, 1.0f, 1.0f));FTransform(const FRotator& InRotation, const FVector& InTranslation, const FVector& InScale3D = FVector(1.0f, 1.0f, 1.0f));
     
     // 추가 생성자들
     explicit FTransform(const FVector& InTranslation);
