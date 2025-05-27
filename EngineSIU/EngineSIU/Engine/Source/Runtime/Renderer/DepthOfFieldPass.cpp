@@ -29,10 +29,22 @@ void FDepthOfFieldPass::ClearRenderArr()
 void FDepthOfFieldPass::Render(const std::shared_ptr<FEditorViewportClient>& Viewport)
 {
     PrepareRender(Viewport);
-
-    UpdateDoFConstant(Viewport);
     
+    PrepareCoCPass(Viewport);
     Graphics->DeviceContext->Draw(6, 0);
+    CleanUpCoCPass(Viewport);
+
+    PrepareBlurNearPass(Viewport);
+    Graphics->DeviceContext->Draw(6, 0);
+    CleanUpBlurNearPass(Viewport);
+
+    PrepareBlurFarPass(Viewport);
+    Graphics->DeviceContext->Draw(6, 0);
+    CleanUpBlurFarPass(Viewport);
+
+    PrepareCompositePass(Viewport);
+    Graphics->DeviceContext->Draw(6, 0);
+    CleanUpCompositePass(Viewport);
 
     CleanUpRender(Viewport);
 }
