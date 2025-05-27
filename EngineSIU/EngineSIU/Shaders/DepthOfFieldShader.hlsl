@@ -36,13 +36,6 @@ float LinearizeDepth(float z)
     return NearClip * FarClip / (FarClip - z * (FarClip - NearClip));
 }
 
-//float ComputeCoC(float ViewZ)
-//{
-//    float FocusRange = FocusDistance * 0.5;
-//    float coc = abs(ViewZ - FocusDistance) / FocusRange;
-//    return saturate(coc) * MaxCoC;
-//}
-
 float ComputePhysicalCoC(float SceneDepth_World)
 {
     // 1) 단위 통일: cm → mm
@@ -71,34 +64,6 @@ float ComputePhysicalCoC(float SceneDepth_World)
 
     return ScaledCoC;
 }
-
-
-
-//float3 GaussianBlur(float2 uv, float coc)
-//{
-//    float2 texelSize = 1.0 / ScreenSize;
-//    float3 color = 0;
-//    float weightSum = 0;
-
-//    const int radius = 8;
-
-//    for (int y = -radius; y <= radius; ++y)
-//    {
-//        for (int x = -radius; x <= radius; ++x)
-//        {
-//            float2 offset = float2(x, y) * texelSize * coc;
-//            float2 sampleUV = uv + offset;
-
-//            float2 dist = float2(x, y);
-//            float weight = exp(-dot(dist, dist) / 20.0); // 가우시안 커널
-
-//            color += SceneColorTexture.Sample(LinearSampler, sampleUV) * weight;
-//            weightSum += weight;
-//        }
-//    }
-
-//    return color / weightSum;
-//}
 
 static const int NUM_SAMPLES = 19;
 static const float2 PoissonDisk[NUM_SAMPLES] =
@@ -178,17 +143,6 @@ PS_INPUT mainVS(uint VertexID : SV_VertexID)
 
     return Output;
 }
-
-//float4 mainPS(PS_INPUT input) : SV_Target
-//{
-//    float RawDepth = SceneDepthTexture.Sample(LinearSampler, input.UV).r;
-//    float ViewZ = LinearizeDepth(RawDepth);
-//    float CoC = ComputeCoC(ViewZ);
-//    float3 BlurredColor = GaussianBlur(input.UV, CoC);
-//    float Blend = saturate(CoC / MaxCoC);
-//    return float4(BlurredColor, Blend);
-//}
-
 
 float4 PS_GenerateCoC(PS_INPUT IN) : SV_Target
 {

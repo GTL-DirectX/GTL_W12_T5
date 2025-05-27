@@ -302,7 +302,7 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
             GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->SetCameraSpeed(CameraSpeed);
         }
 
-        ImGui::Spacing();
+        ImGui::Separator();
 
         ImGui::Text("Focal Length");
         float FocalLength= GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocalLength_mm;
@@ -334,22 +334,22 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
 
         ImGui::Spacing();
 
-        ImGui::Text("SensroWidth_mm");
+        ImGui::Text("SensroWidth");
         float SensorWidth_mm = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->SensorWidth_mm;
         ImGui::SetNextItemWidth(120.0f);
-        if (ImGui::DragFloat("##SensroWidth_mm", &SensorWidth_mm, 1.0f, 1.0f, 100.0f, "%.1f"))
+        if (ImGui::DragFloat("##SensroWidth", &SensorWidth_mm, 1.0f, 1.0f, 100.0f, "%.1f"))
         {
             GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->SensorWidth_mm = SensorWidth_mm;
         }
 
         ImGui::Spacing();
 
-        ImGui::Text("Max CoC");
-        float MaxCoC = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->CoCScaleFactor;
+        ImGui::Text("CoCScaleFactor");
+        float CoCScaleFactor = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->CoCScaleFactor;
         ImGui::SetNextItemWidth(120.0f);
-        if (ImGui::DragFloat("##MaxCoC", &MaxCoC, 1.0f, 1.0f, 100.0f, "%.1f"))
+        if (ImGui::DragFloat("##CoCScaleFactor", &CoCScaleFactor, 1.0f, 1.0f, 100.0f, "%.1f"))
         {
-            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->CoCScaleFactor = MaxCoC;
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->CoCScaleFactor = CoCScaleFactor;
         }
 
         ImGui::Separator();
