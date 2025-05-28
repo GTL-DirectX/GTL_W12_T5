@@ -5,7 +5,7 @@
 #include "Classes/Components/InputComponent.h"
 
 class APlayerCameraManager;
-
+class APlayer;
 class APlayerController : public AActor
 {
     DECLARE_CLASS(APlayerController, AActor)
@@ -29,13 +29,13 @@ public:
 
     void SetViewTarget(class AActor* NewViewTarget, struct FViewTargetTransitionParams TransitionParams);
 
-    virtual void Possess(AActor* InActor);
+    virtual void Possess(APlayer* InPlayer);
 
     virtual void UnPossess();
     
     virtual void BindAction(const FString& Key, const std::function<void(float)>& Callback);
 
-    AActor* GetPossessedActor() { return PossessedActor; }
+    APlayer* GetPossessedActor() { return PossessedPlayer; }
     // 카메라 관련 함수
 public:
     void FOV(float NewFOV);
@@ -55,7 +55,7 @@ protected:
 
     virtual void SetupInputComponent();
 
-    AActor* PossessedActor = nullptr;
+    APlayer* PossessedPlayer = nullptr;
 
     bool bHasPossessed = false;
 };

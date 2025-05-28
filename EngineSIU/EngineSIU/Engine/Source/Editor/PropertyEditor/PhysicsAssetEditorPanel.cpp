@@ -9,6 +9,7 @@
 #include "Physics/ConstraintInstance.h"
 #include "Physics/PhysicsAsset.h"
 #include "Physics/PhysicsConstraintTemplate.h"
+#include "UnrealEd/ImGuiWidget.h"
 
 PhysicsAssetEditorPanel::PhysicsAssetEditorPanel()
 {
@@ -31,7 +32,7 @@ void PhysicsAssetEditorPanel::Render()
 
     USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(Engine->GetSelectedComponent());
 
-    if (SkeletalMeshComponent)
+    if (SkeletalMeshComponent and SkeletalMeshComponent->GetSkeletalMeshAsset() != CurrentSkeletalMesh)
     {
         SetSkeletalMesh(SkeletalMeshComponent->GetSkeletalMeshAsset());
     }
@@ -48,7 +49,6 @@ void PhysicsAssetEditorPanel::Render()
 
     if (CurrentPhysicsAsset)
     {
-        
         CurrentPhysicsAsset->UpdateBodySetupIndexMap();
     }
 
@@ -65,22 +65,11 @@ void PhysicsAssetEditorPanel::Render()
     ImGui::Begin("SaveAssetButton", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground);
     if (ImGui::Button("Save", ImVec2(-1, -1))) // -1은 사용 가능한 전체 너비/높이를 의미
     {
-        // if (CurrentPhysicsAsset)
-        // {
-        //     // 에셋 저장 로직 (UAssetManager 사용 예시)
-        //     // 실제 저장 경로나 방식은 엔진 구현에 따라 달라질 수 있습니다.
-        //     FString PackagePath = CurrentPhysicsAsset->GetPackagePath(); // 에셋의 패키지 경로 가져오기
-        //     if (!PackagePath.IsEmpty())
-        //     {
-        //         UAssetManager::Get().SaveAsset(CurrentPhysicsAsset, PackagePath);
-        //         UE_LOG(LogTemp, Log, TEXT("PhysicsAsset '%s' saved to '%s'"), *CurrentPhysicsAsset->GetName(), *PackagePath);
-        //     }
-        //     else
-        //     {
-        //         UE_LOG(LogTemp, Warning, TEXT("Could not save PhysicsAsset '%s': PackagePath is empty."), *CurrentPhysicsAsset->GetName());
-        //         // 필요하다면 "Save As" 다이얼로그 로직 추가
-        //     }
-        // }
+        if (CurrentPhysicsAsset)
+        {
+            //스켈레탈 메쉬 이름으로 저장
+            UAssetManager::Get().SavePhysicsAssets(CurrentPhysicsAsset, CurrentPhysicsAsset->GetName());
+        }
     }
     ImGui::End();
 
@@ -165,11 +154,21 @@ void PhysicsAssetEditorPanel::Render()
 void PhysicsAssetEditorPanel::SetSkeletalMesh(USkeletalMesh* InSkeletalMesh)
 {
     CurrentSkeletalMesh = InSkeletalMesh;
-    SetPhysicsAsset(CurrentSkeletalMesh ? CurrentSkeletalMesh->PhysicsAsset : nullptr);
+    if (!CurrentSkeletalMesh)
+    {
+        return;
+    }
+    
+    if (CurrentSkeletalMesh->PhysicsAsset == nullptr)
+    {
+        CurrentSkeletalMesh->CreateOrBindPhysicsAsset();
+    }
+    SetPhysicsAsset(CurrentSkeletalMesh->PhysicsAsset);
     
     SelectedBoneName = NAME_None;
-    USkeletalBodySetup* SelectedBodySetup = nullptr; // 선택된 BodySetup 객체
-    UPhysicsConstraintTemplate* SelectedConstraintTemplate = nullptr; // 선택된 ConstraintTemplate 객체
+    
+    SelectedBodySetup = nullptr; // 선택된 BodySetup 객체
+    SelectedConstraintTemplate = nullptr; // 선택된 ConstraintTemplate 객체
 }
 
 void PhysicsAssetEditorPanel::OnResize(HWND hWnd)
@@ -185,8 +184,8 @@ void PhysicsAssetEditorPanel::SetPhysicsAsset(UPhysicsAsset* InPhysicsAsset)
     CurrentPhysicsAsset = InPhysicsAsset;
     // 피직스 에셋이 변경되면 선택 정보 초기화
     SelectedBoneName = NAME_None;
-    USkeletalBodySetup* SelectedBodySetup = nullptr; // 선택된 BodySetup 객체
-    UPhysicsConstraintTemplate* SelectedConstraintTemplate = nullptr; // 선택된 ConstraintTemplate 객체
+    SelectedBodySetup = nullptr; // 선택된 BodySetup 객체
+    SelectedConstraintTemplate = nullptr; // 선택된 ConstraintTemplate 객체
 
     if (CurrentPhysicsAsset)
     {
@@ -200,18 +199,19 @@ void PhysicsAssetEditorPanel::RenderDetailsPanel()
     if (SelectedBodySetup)
     {
         ImGui::SeparatorText(*FString::Printf(TEXT("Body Setup: %s"), *SelectedBodySetup->BoneName.ToString()));
-        RenderObjectDetails(SelectedBodySetup);
 
-        // USkeletalBodySetup의 멤버인 UBodySetup의 프로퍼티도 표시하고 싶다면:
-        // UBodySetup* BaseBodySetup = Cast<UBodySetup>(SelectedBodySetup); // 이미 USkeletalBodySetup이 UBodySetup을 상속
-        // if (BaseBodySetup) {
-        //     ImGui::SeparatorText(*FString::Printf(TEXT("Base BodySetup Properties (%s)"), *BaseBodySetup->GetClass()->GetName()));
-        //     RenderObjectDetails(BaseBodySetup); // 이렇게 하면 중복될 수 있으니, RenderObjectDetails가 부모 클래스까지 처리하도록 하거나,
-        // 명시적으로 필요한 프로퍼티만 표시
-        // }
+        // 삭제 버튼 추가
 
-        // FKAggregateGeom 같은 커스텀 구조체는 별도의 UI 렌더링 함수 필요
-        // 예: RenderAggregateGeomDetails(SelectedBodySetup->GetAggGeom());
+        ImGui::SameLine(); // 필요하다면 다른 버튼과 같은 줄에 배치
+        
+        RenderObjectDetails(SelectedBodySetup); // UBodySetup (및 USkeletalBodySetup)의 프로퍼티 표시
+        RenderConstraintCreationUI(SelectedBodySetup->BoneName, TEXT("FromSelectedBodySetup")); // UiContextId 전달
+
+        if (ImGui::Button(*FString::Printf(TEXT("Delete BodySetup: %s"), *SelectedBodySetup->BoneName.ToString())))
+        {
+            HandleDeleteSelectedBodySetup(); // 삭제 핸들러 호출
+            return; // 중요: 삭제 후에는 이 프레임에서 더 이상 이 객체에 접근하지 않도록 함
+        }
     }
     else if (SelectedConstraintTemplate)
     {
@@ -219,25 +219,86 @@ void PhysicsAssetEditorPanel::RenderDetailsPanel()
         FString ConstraintName = CI.JointName != NAME_None ? CI.JointName.ToString() : FString::Printf(TEXT("%s - %s"), *CI.ConstraintBone1.ToString(), *CI.ConstraintBone2.ToString());
 
         ImGui::SeparatorText(*FString::Printf(TEXT("Constraint: %s"), *ConstraintName));
+
+        // 삭제 버튼 추가
+
+        ImGui::SameLine();
+        // (만약 다른 버튼이 있다면) ImGui::Spacing();
+        
         RenderObjectDetails(SelectedConstraintTemplate); // UPhysicsConstraintTemplate의 프로퍼티
 
-        // // FConstraintInstance는 UObject가 아니므로 직접 RenderObjectDetails를 사용할 수 없음.
-        // // FConstraintInstance의 멤버들을 직접 ImGui 위젯으로 표시해야 함.
-        // ImGui::SeparatorText("Constraint Instance Details");
-        // // 예시:
-        // ImGui::Text("Constraint Bone 1: %s", *CI.ConstraintBone1.ToString());
-        // ImGui::Text("Constraint Bone 2: %s", *CI.ConstraintBone2.ToString());
-        // // ... FConstraintFrame, ELinearConstraintMotion 등을 위한 커스텀 UI 로직 ...
-        // // FImGuiWidget::DrawEnumCombo("X Motion", CI.XMotion); // 이런 헬퍼 함수가 있다면 사용
-        // // FImGuiWidget::DrawFloat("Linear Limit", CI.Limits.Linear);
+        if (ImGui::Button(*FString::Printf(TEXT("Delete Constraint: %s"), *ConstraintName)))
+        {
+            HandleDeleteSelectedConstraintTemplate(); // 삭제 핸들러 호출
+            // 삭제 후에는 SelectedConstraintTemplate이 유효하지 않으므로, 바로 리턴
+            return;
+        }
     }
     else if (SelectedBoneName != NAME_None)
     {
         ImGui::SeparatorText(*FString::Printf(TEXT("Bone: %s"), *SelectedBoneName.ToString()));
-        // 본 자체에 대한 정보 표시 (예: 트랜스폼, 스켈레탈 메시에서의 정보 등)
-        // 이 정보는 UObject가 아닐 수 있으므로 직접 ImGui 위젯 사용
-        ImGui::Text("Selected bone does not have direct editable properties here.");
-        ImGui::Text("Select an associated Body or Constraint to see details.");
+        
+        // 현재 선택된 본에 이미 BodySetup이 있는지 확인
+        bool bHasExistingBodySetup = false;
+        USkeletalBodySetup* ExistingBodySetup = nullptr;
+        if (CurrentPhysicsAsset)
+        {
+            for (USkeletalBodySetup* BodySetup : CurrentPhysicsAsset->SkeletalBodySetups)
+            {
+                if (BodySetup && BodySetup->BoneName == SelectedBoneName)
+                {
+                    bHasExistingBodySetup = true;
+                    ExistingBodySetup = BodySetup; // 기존 BodySetup을 참조
+                    break;
+                }
+            }
+        }
+
+        if (bHasExistingBodySetup && ExistingBodySetup)
+        {
+            // 이미 BodySetup이 존재하면, 해당 BodySetup의 디테일을 표시하도록 유도하거나,
+            // 선택을 해당 BodySetup으로 변경할 수 있습니다.
+            ImGui::Text("This bone already has a BodySetup.");
+            if (ImGui::Button(*FString::Printf(TEXT("Select BodySetup for %s"), *SelectedBoneName.ToString())))
+            {
+                SelectedBodySetup = ExistingBodySetup; // 선택을 기존 BodySetup으로 변경
+                // SelectedBoneName은 유지하거나, BodySetup 선택 시 어떻게 할지 정책에 따라 결정
+            }
+            RenderConstraintCreationUI(SelectedBoneName, TEXT("FromSelectedBoneWithBodySetup")); // UiContextId 전달
+        }
+        else
+        {
+            // BodySetup이 없는 경우, 생성 버튼 표시
+            FString ButtonLabel = FString::Printf(TEXT("Create BodySetup for %s"), *SelectedBoneName.ToString());
+            if (ImGui::Button(*ButtonLabel))
+            {
+                if (CurrentPhysicsAsset) // CurrentPhysicsAsset이 유효한지 다시 한번 확인
+                {
+                    // 새 USkeletalBodySetup 객체 생성
+                    // Outer를 CurrentPhysicsAsset으로 지정하여 소유 관계를 명확히 합니다.
+                    USkeletalBodySetup* NewBodySetup = FObjectFactory::ConstructObject<USkeletalBodySetup>(CurrentPhysicsAsset);
+                    if (NewBodySetup)
+                    {
+                        NewBodySetup->BoneName = SelectedBoneName;
+                        CurrentPhysicsAsset->SkeletalBodySetups.Add(NewBodySetup);
+                        CurrentPhysicsAsset->UpdateBodySetupIndexMap(); // BodySetup 추가 후 맵 업데이트
+
+                        // 새로 생성된 BodySetup을 바로 선택 상태로 만들 수 있습니다.
+                        SelectedBodySetup = NewBodySetup;
+                        SelectedBoneName = NAME_None; // BodySetup이 선택되었으므로 본 자체 선택은 해제 (선택 사항)
+
+                        UE_LOG(ELogLevel::Display, TEXT("Created BodySetup for bone: %s"), *SelectedBoneName.ToString());
+                    }
+                    else
+                    {
+                        UE_LOG(ELogLevel::Error, TEXT("Failed to construct USkeletalBodySetup for bone: %s"), *SelectedBoneName.ToString());
+                    }
+                }
+            }
+        }
+
+        
+        
     }
     else if (CurrentPhysicsAsset && !SelectedBodySetup && !SelectedConstraintTemplate && SelectedBoneName == NAME_None)
     {
@@ -466,5 +527,160 @@ void PhysicsAssetEditorPanel::LoadIcons()
     BodyIconSRV = FEngineLoop::ResourceManager.GetTexture(L"Assets/Viewer/RigidBody_16x.PNG")->TextureSRV;
     ConstraintIconSRV = FEngineLoop::ResourceManager.GetTexture(L"Assets/Viewer/Constraint.PNG")->TextureSRV;
 
+}
+
+
+ void PhysicsAssetEditorPanel::RenderConstraintCreationUI(FName FirstBoneName, const FString& UiContextId)
+{
+    if (FirstBoneName == NAME_None || !CurrentPhysicsAsset)
+    {
+        return;
+    }
+
+    ImGui::SeparatorText(*FString::Printf(TEXT("Create Constraint from %s to..."), *FirstBoneName.ToString()));
+
+    // 각 UI 컨텍스트마다 고유한 static 변수를 사용하기 위해 ID를 활용하거나,
+    // 멤버 변수로 SecondBoneToConstrain을 컨텍스트별로 관리해야 할 수 있습니다.
+    // 여기서는 간단하게 UiContextId를 사용하여 ImGui ID를 다르게 합니다.
+    // 더 나은 방법은 멤버 변수로 각 컨텍스트의 선택 상태를 저장하는 것입니다.
+    // 예: static TMap<FString, FName> ContextualSecondBoneSelection;
+    // 여기서는 설명을 위해 간단한 static 변수를 사용하되, ID로 구분합니다.
+
+    ImGui::PushID(*UiContextId); // ID 푸시
+
+    static FName SecondBoneToConstrain = NAME_None;
+    FString ComboLabel = FString::Printf(TEXT("Connect to Body##%s"), *UiContextId); // 고유 레이블
+    FString SecondBoneComboPreview = SecondBoneToConstrain == NAME_None ? TEXT("Select Second Body...") : SecondBoneToConstrain.ToString();
+
+    if (ImGui::BeginCombo(*ComboLabel, *SecondBoneComboPreview))
+    {
+        for (USkeletalBodySetup* OtherBodySetup : CurrentPhysicsAsset->SkeletalBodySetups)
+        {
+            // 첫 번째 본과 다른 BodySetup만 선택 가능하도록
+            if (OtherBodySetup && OtherBodySetup->BoneName != FirstBoneName)
+            {
+                if (ImGui::Selectable(*OtherBodySetup->BoneName.ToString(), SecondBoneToConstrain == OtherBodySetup->BoneName))
+                {
+                    SecondBoneToConstrain = OtherBodySetup->BoneName;
+                }
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+    if (SecondBoneToConstrain != NAME_None)
+    {
+        FString ButtonLabel = FString::Printf(TEXT("Create Constraint (%s - %s)##%s"), *FirstBoneName.ToString(), *SecondBoneToConstrain.ToString(), *UiContextId);
+        if (ImGui::Button(*ButtonLabel))
+        {
+            // 이미 두 본 사이에 제약 조건이 있는지 확인
+            bool bConstraintExists = false;
+            for (UPhysicsConstraintTemplate* ExistingConstraint : CurrentPhysicsAsset->ConstraintTemplates)
+            {
+                if (ExistingConstraint)
+                {
+                    const FConstraintInstance& CI = ExistingConstraint->DefaultInstance;
+                    if ((CI.ConstraintBone1 == FirstBoneName && CI.ConstraintBone2 == SecondBoneToConstrain) ||
+                        (CI.ConstraintBone1 == SecondBoneToConstrain && CI.ConstraintBone2 == FirstBoneName))
+                    {
+                        bConstraintExists = true;
+                        UE_LOG(ELogLevel::Warning, TEXT("Constraint already exists between %s and %s."), *FirstBoneName.ToString(), *SecondBoneToConstrain.ToString());
+                        break;
+                    }
+                }
+            }
+
+            if (!bConstraintExists)
+            {
+                UPhysicsConstraintTemplate* NewConstraint = FObjectFactory::ConstructObject<UPhysicsConstraintTemplate>(CurrentPhysicsAsset);
+                if (NewConstraint)
+                {
+                    NewConstraint->DefaultInstance.ConstraintBone1 = FirstBoneName;
+                    NewConstraint->DefaultInstance.ConstraintBone2 = SecondBoneToConstrain;
+                    NewConstraint->DefaultInstance.JointName = FName(*FString::Printf(TEXT("[%s -> %s] Constraint"), *FirstBoneName.ToString(), *SecondBoneToConstrain.ToString()));
+
+                    CurrentPhysicsAsset->ConstraintTemplates.Add(NewConstraint);
+
+                    SelectedConstraintTemplate = NewConstraint;
+                    SelectedBodySetup = nullptr;
+                    SelectedBoneName = NAME_None;
+                    SecondBoneToConstrain = NAME_None; // 중요: 여기서 초기화하면 다음 프레임에 콤보박스가 초기화됨.
+                                                       // UI 상태 유지를 위해 호출부에서 적절히 관리하거나,
+                                                       // 성공적으로 생성 후 명시적으로 초기화 필요.
+
+                    UE_LOG(ELogLevel::Display, TEXT("Created Constraint between %s and %s."), *NewConstraint->DefaultInstance.ConstraintBone1.ToString(), *NewConstraint->DefaultInstance.ConstraintBone2.ToString());
+                }
+                else
+                {
+                    UE_LOG(ELogLevel::Error, TEXT("Failed to construct UPhysicsConstraintTemplate."));
+                }
+            }
+            // 제약 조건 생성 시도 후에는 SecondBoneToConstrain 선택을 초기화하여
+            // 다음 번 UI 표시 시 "Select Second Body..."로 나타나도록 합니다.
+            SecondBoneToConstrain = NAME_None;
+        }
+    }
+    ImGui::PopID(); // ID 팝
+}
+
+void PhysicsAssetEditorPanel::HandleDeleteSelectedBodySetup()
+{
+    if (CurrentPhysicsAsset && SelectedBodySetup)
+    {
+        FName BodySetupNameToDelete = SelectedBodySetup->BoneName; // 로그용
+
+        // 1. CurrentPhysicsAsset->SkeletalBodySetups 배열에서 해당 BodySetup 제거
+        CurrentPhysicsAsset->SkeletalBodySetups.Remove(SelectedBodySetup);
+
+        // 2. 이 BodySetup을 참조하는 모든 Constraint도 함께 제거해야 함
+        for (int32 i = CurrentPhysicsAsset->ConstraintTemplates.Num() - 1; i >= 0; --i)
+        {
+            UPhysicsConstraintTemplate* Constraint = CurrentPhysicsAsset->ConstraintTemplates[i];
+            if (Constraint)
+            {
+                const FConstraintInstance& ConstraintInstance = Constraint->DefaultInstance;
+                if (ConstraintInstance.ConstraintBone1 == SelectedBodySetup->BoneName || ConstraintInstance.ConstraintBone2 == SelectedBodySetup->BoneName)
+                {
+                    // 만약 현재 선택된 Constraint가 삭제 대상 Constraint라면, 선택도 해제
+                    if (SelectedConstraintTemplate == Constraint)
+                    {
+                        SelectedConstraintTemplate = nullptr;
+                    }
+                    CurrentPhysicsAsset->ConstraintTemplates.RemoveAt(i);
+                    UE_LOG(ELogLevel::Display, TEXT("Automatically deleted Constraint referencing BodySetup %s: %s"), *BodySetupNameToDelete.ToString(), *(ConstraintInstance.JointName != NAME_None ? ConstraintInstance.JointName.ToString() : FString::Printf(TEXT("%s-%s"), *ConstraintInstance.ConstraintBone1.ToString(), *ConstraintInstance.ConstraintBone2.ToString())));
+                }
+            }
+        }
+
+        // 3. 내부 인덱스 맵 업데이트 (필요하다면)
+        CurrentPhysicsAsset->UpdateBodySetupIndexMap();
+
+        UE_LOG(ELogLevel::Display, TEXT("Deleted BodySetup: %s"), *BodySetupNameToDelete.ToString());
+        
+        // 4. 선택 상태 초기화
+        SelectedBodySetup = nullptr;
+        // SelectedBoneName = NAME_None; // 본 선택도 해제할지 여부 결정
+        
+    }
+}
+
+void PhysicsAssetEditorPanel::HandleDeleteSelectedConstraintTemplate()
+{
+    if (CurrentPhysicsAsset && SelectedConstraintTemplate)
+    {
+        FString ConstraintNameToDelete = SelectedConstraintTemplate->DefaultInstance.JointName != NAME_None ?
+                                         SelectedConstraintTemplate->DefaultInstance.JointName.ToString() :
+                                         FString::Printf(TEXT("%s - %s"), *SelectedConstraintTemplate->DefaultInstance.ConstraintBone1.ToString(), *SelectedConstraintTemplate->DefaultInstance.ConstraintBone2.ToString());
+
+
+        // 1. CurrentPhysicsAsset->ConstraintTemplates 배열에서 해당 ConstraintTemplate 제거
+        CurrentPhysicsAsset->ConstraintTemplates.Remove(SelectedConstraintTemplate);
+
+
+        UE_LOG(ELogLevel::Display, TEXT("Deleted ConstraintTemplate: %s"), *ConstraintNameToDelete);
+
+        // 3. 선택 상태 초기화
+        SelectedConstraintTemplate = nullptr;
+    }
 }
 

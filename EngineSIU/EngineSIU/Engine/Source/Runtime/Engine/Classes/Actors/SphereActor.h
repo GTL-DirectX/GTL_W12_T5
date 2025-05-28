@@ -1,19 +1,15 @@
 #pragma once
-#include "GameFramework/Actor.h"
+
+#include "Engine/StaticMeshActor.h"
 
 class USphereComponent;
 
 
-class ASphereActor : public AActor
+class ASphereActor : public AStaticMeshActor
 {
-    DECLARE_CLASS(ASphereActor, AActor)
+    DECLARE_CLASS(ASphereActor, AStaticMeshActor)
 public:
     ASphereActor();
-
-    USphereComponent* GetShapeComponent() const;
-protected:
-    UPROPERTY
-    (USphereComponent*, SphereComponent, = nullptr);
 
 };
 

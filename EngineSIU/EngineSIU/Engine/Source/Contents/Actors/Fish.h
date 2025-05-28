@@ -43,7 +43,7 @@ struct FChildStruct : public FTestStruct
     
     UPROPERTY(
         EditAnywhere,
-        TArray<FTestStruct>, TestStruct, {};
+        TArray<FTestStruct>, TestStruct, {};    
     )
 };
 

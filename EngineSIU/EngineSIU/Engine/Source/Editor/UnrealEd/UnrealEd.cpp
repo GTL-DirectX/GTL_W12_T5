@@ -65,6 +65,9 @@ void UnrealEd::Render() const
     case EWorldType::PhysicsViewer:
         currentMask = EWorldTypeBitFlag::PhysicsViewer;
         break;
+    case EWorldType::SimulationViewer:
+        currentMask = EWorldTypeBitFlag::SimulationViewer;
+        break;
     default:
         currentMask = EWorldTypeBitFlag::None;
         break;

@@ -9,7 +9,11 @@ class UPhysicsConstraintTemplate : public UObject
     
 public:
     // 실제 제약 값.
-    FConstraintInstance DefaultInstance;
+
+    UPROPERTY(
+    EditAnywhere,
+    FConstraintInstance, DefaultInstance, {}
+    )
     
     UPhysicsConstraintTemplate() = default;
 

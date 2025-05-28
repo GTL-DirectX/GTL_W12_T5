@@ -6,6 +6,8 @@
 #include "Animation/Skeleton.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/Asset/SkeletalMeshAsset.h"
+#include "Physics/PhysicsAsset.h"
+#include "Physics/PhysicsAssetUtils.h"
 #include "Misc/FrameTime.h"
 #include "Animation/AnimSingleNodeInstance.h"
 #include "Animation/AnimTypes.h"
@@ -53,7 +55,15 @@ UObject* USkeletalMeshComponent::Duplicate(UObject* InOuter)
     }
     NewComponent->SetLooping(this->IsLooping());
     NewComponent->SetPlaying(this->IsPlaying());
+    NewComponent->bRagdollActivated = bRagdollActivated;
     return NewComponent;
+}
+
+void USkeletalMeshComponent::BeginPlay()
+{
+    Super::BeginPlay();
+
+    InitPhysicsBodies();
 }
 
 void USkeletalMeshComponent::TickComponent(float DeltaTime)
@@ -166,6 +176,11 @@ void USkeletalMeshComponent::SetSkeletalMeshAsset(USkeletalMesh* InSkeletalMeshA
     CPURenderData->Indices = InSkeletalMeshAsset->GetRenderData()->Indices;
     CPURenderData->ObjectName = InSkeletalMeshAsset->GetRenderData()->ObjectName;
     CPURenderData->MaterialSubsets = InSkeletalMeshAsset->GetRenderData()->MaterialSubsets;
+
+    if (!SkeletalMeshAsset->PhysicsAsset)
+    {
+        SkeletalMeshAsset->CreateOrBindPhysicsAsset();
+    }
 }
 
 FTransform USkeletalMeshComponent::GetSocketTransform(FName SocketName) const
@@ -440,6 +455,77 @@ void USkeletalMeshComponent::CPUSkinning(bool bForceUpdate)
              CPURenderData->Vertices[i].NormalZ = SkinnedNormal.Z;
            }
      }
+}
+
+void USkeletalMeshComponent::UpdateFromPhysics(float DeltaTime)
+{
+    Super::UpdateFromPhysics(DeltaTime);
+
+    if (!bRagdollActivated || !SkeletalMeshAsset || !SkeletalMeshAsset->GetSkeleton())
+    {
+        return;
+    }
+
+    const FReferenceSkeleton& RefSkeleton = SkeletalMeshAsset->GetSkeleton()->GetReferenceSkeleton();
+
+    for (FBodyInstance* Body : Bodies)
+    {
+        if (!Body || !Body->BodySetup || !Body->PxRigidActor)
+            continue;
+
+        const FName BoneName = Body->BodySetup->BoneName;
+        const int32 BoneIndex = RefSkeleton.FindBoneIndex(BoneName);
+        if (BoneIndex == INDEX_NONE)
+            continue;
+
+        // 월드 공간에서의 물리 위치
+        FTransform WorldTM = FromPxTransform(Body->PxRigidActor->getGlobalPose());
+
+        // SkeletalMeshComponent 기준의 로컬 트랜스폼으로 변환
+        FTransform LocalTM = WorldTM.GetRelativeTransform(GetComponentTransform());
+
+        // 해당 BoneIndex에 직접 반영
+        BonePoseContext.Pose[BoneIndex] = LocalTM;
+    }
+}
+
+void USkeletalMeshComponent::ActivateRagdoll()
+{
+    for (FBodyInstance* Body : Bodies)
+    {
+        if (Body && Body->RigidBody)
+        {
+            Body->RigidBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, false);
+            Body->RigidBody->wakeUp();
+        }
+    }
+    bRagdollActivated = true;
+}
+
+void USkeletalMeshComponent::DeactivateRagdoll()
+{
+    for (FBodyInstance* Body : Bodies)
+    {
+        if (Body && Body->RigidBody)
+        {
+            Body->RigidBody->putToSleep();
+            Body->RigidBody->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+        }
+    }
+    bRagdollActivated = false;
+}
+
+void USkeletalMeshComponent::InitPhysicsBodies()
+{
+    if (!SkeletalMeshAsset || !SkeletalMeshAsset->PhysicsAsset)
+    {
+        return;
+    }
+
+    Bodies.Empty();
+    Constraints.Empty();
+
+    SkeletalMeshAsset->PhysicsAsset->CreatePhysicsInstance(GetWorld(), this, Bodies, Constraints);
 }
 
 UAnimSingleNodeInstance* USkeletalMeshComponent::GetSingleNodeInstance() const

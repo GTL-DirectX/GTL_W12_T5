@@ -1,15 +1,18 @@
 #include "SphereActor.h"
 
-#include "Components/SphereComponent.h"
+#include "UObject/ObjectFactory.h"
+#include "Physics/BodySetup.h"
+#include "Components/StaticMeshComponent.h"
 
+#include "Engine/FObjLoader.h"
 
 ASphereActor::ASphereActor()
 {
-    SphereComponent = AddComponent<USphereComponent>();
-    RootComponent = SphereComponent;
-}
+    StaticMeshComponent->SetStaticMesh(FObjManager::GetStaticMesh(L"Contents/Primitives/SpherePrimitive.obj"));
 
-USphereComponent* ASphereActor::GetShapeComponent() const
-{
-    return SphereComponent;
+    if (!StaticMeshComponent->GetBodySetup())
+    {
+        StaticMeshComponent->GetStaticMesh()->SetBodySetup(FObjectFactory::ConstructObject<UBodySetup>(this));
+        StaticMeshComponent->GetBodySetup()->AddSphereElem(FKSphereElem(0.5f));
+    }
 }

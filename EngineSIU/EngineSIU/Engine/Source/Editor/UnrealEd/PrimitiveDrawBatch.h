@@ -63,6 +63,8 @@ public:
     // 파이프라인 관련 (렌더러에서 호출하는 "prepare" 함수)
     void PrepareLineResources() const;
 
+    
+
 private:
     // Graphics 디바이스 (초기화 시 전달받음)
     FGraphicsDevice* Graphics = nullptr;

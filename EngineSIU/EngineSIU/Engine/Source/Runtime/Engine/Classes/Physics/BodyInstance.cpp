@@ -6,19 +6,16 @@
 #include "Components/PrimitiveComponent.h"
 #include "PhysicalMaterial.h"
 
-void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
+void FBodyInstance::InitBody(PxScene* Scene, const FTransform& InitWorldTransform, class UPrimitiveComponent* Owner)
 {
-    if (bInitialized)
-        return;
-
-    if (!BodySetup || !Scene)
+    if (bInitialized || !BodySetup || !Scene)
         return;
 
     PxPhysics* Physics = FPhysXManager::Get().GetPhysics();
     if (!Physics)
         return;
 
-    const FKAggregateGeom& AggGeom = BodySetup->GetAggGeom();
+    const FKAggregateGeom& AggGeom = BodySetup->AggGeom;
     if (AggGeom.BoxElems.Num() == 0 && 
         AggGeom.SphereElems.Num() == 0 &&
         AggGeom.SphylElems.Num() == 0 &&
@@ -27,8 +24,7 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
         return; // No shapes to create
     }
 
-    const FTransform WorldTM = Owner->GetComponentTransform();
-    const PxTransform PxTM = ToPxTransform(WorldTM);
+    const PxTransform PxTM = ToPxTransform(InitWorldTransform);
 
     if (Owner->PhysicsBodyType == EPhysicsBodyType::Static)
     {
@@ -60,6 +56,10 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
         return;
     }
 
+    PxFilterData FilterData;
+    FilterData.word0 = Owner->GetUUID();
+    FilterData.word1 = 0xFFFF;
+
     for (const FKBoxElem& BoxElem : AggGeom.BoxElems)
     {
         PxBoxGeometry BoxGeom(BoxElem.X, BoxElem.Y, BoxElem.Z);
@@ -73,9 +73,58 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
         PxTransform BoxLocalPose = ToPxTransform(BoxLoaclTM);
 
         Shape->setLocalPose(BoxLocalPose);
-        PxRigidActor->attachShape(*Shape);
+        Shape->setSimulationFilterData(FilterData);
 
+        Shape->setRestOffset(BoxElem.RestOffset);
+        Shape->setContactOffset(BoxElem.RestOffset + 0.5f);
+
+        PxRigidActor->attachShape(*Shape);
         Shape->release();
+    }
+
+    for (const FKSphereElem& SphereElem : AggGeom.SphereElems)
+    {
+        PxSphereGeometry SphereGeom(SphereElem.Radius);
+        PxShape* Shape = Physics->createShape(SphereGeom, *Material);
+        if (!Shape)
+        {
+            continue;
+        }
+        FTransform SphereLocalTM = SphereElem.GetTransform();
+        PxTransform SphereLocalPose = ToPxTransform(SphereLocalTM);
+        Shape->setLocalPose(SphereLocalPose);
+        Shape->setSimulationFilterData(FilterData);
+
+        Shape->setRestOffset(SphereElem.RestOffset);
+        Shape->setContactOffset(SphereElem.RestOffset + 0.5f);
+
+        PxRigidActor->attachShape(*Shape);
+        Shape->release();
+    }
+
+    for (const FKSphylElem& SphylElem : AggGeom.SphylElems)
+    {
+        PxCapsuleGeometry CapsuleGeom(SphylElem.Radius, SphylElem.Length * 0.5f);
+        PxShape* Shape = Physics->createShape(CapsuleGeom, *Material);
+        if (!Shape)
+        {
+            continue;
+        }
+        FTransform SphylLocalTM = SphylElem.GetTransform();
+        PxTransform SphylLocalPose = ToPxTransform(SphylLocalTM);
+        Shape->setLocalPose(SphylLocalPose);
+        Shape->setSimulationFilterData(FilterData);
+
+        Shape->setRestOffset(SphylElem.RestOffset);
+        Shape->setContactOffset(SphylElem.RestOffset + 0.5f);
+
+        PxRigidActor->attachShape(*Shape);
+        Shape->release();
+    }
+
+    for (const FKConvexElem& ConvexElem : AggGeom.ConvexElems)
+    {
+        // Convex 내용 추가.
     }
 
     if (Owner->PhysicsBodyType == EPhysicsBodyType::Dynamic && RigidBody)

@@ -1703,6 +1703,10 @@
     <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Particles\Acceleration\ParticleModuleAccelerationBase.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Physics\KAggregateGeom.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Renderer\DepthOfFieldPass.cpp" />
+    <ClCompile Include="Engine\Source\Editor\PropertyEditor\PhysicsAssetEditorPanel.cpp" />
+    <ClCompile Include="Engine\Source\Runtime\Engine\World\PhysicsViewerWorld.cpp" />
+    <ClCompile Include="Engine\Source\Runtime\Engine\World\SimulationViewerWorld.cpp" />
+    <ClCompile Include="Engine\Source\Runtime\Engine\Classes\Actors\DefaultPlayer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="EngineSIU.natvis" />
@@ -1829,6 +1833,10 @@
     <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Particles\Acceleration\ParticleModuleAcceleration.h" />
     <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Particles\Acceleration\ParticleModuleAccelerationBase.h" />
     <ClInclude Include="Engine\Source\Runtime\Renderer\DepthOfFieldPass.h" />
+    <ClInclude Include="Engine\Source\Editor\PropertyEditor\PhysicsAssetEditorPanel.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\World\PhysicsViewerWorld.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\World\SimulationViewerWorld.h" />
+    <ClInclude Include="Engine\Source\Runtime\Engine\Classes\Actors\DefaultPlayer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\CompositingShader.hlsl" />

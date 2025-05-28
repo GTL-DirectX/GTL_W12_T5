@@ -75,8 +75,6 @@ public:
     bool MoveComponent(const FVector& Delta, const FQuat& NewRotation, bool bSweep, FHitResult* OutHit = nullptr);
     bool MoveComponent(const FVector& Delta, const FRotator& NewRotation, bool bSweep, FHitResult* OutHit = nullptr);
 
-    FTransform GetComponentToWorld() const { return ComponentToWorld; }
-
 protected:
     /** 부모 컴포넌트로부터 상대적인 위치 */
     UPROPERTY
@@ -109,6 +107,4 @@ protected:
 private:
     // TODO: 캐싱해서 사용하기
     bool bComponentToWorldUpdated = true;
-
-    FTransform ComponentToWorld;
 };
