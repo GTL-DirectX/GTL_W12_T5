@@ -196,6 +196,7 @@ void FRenderPassBase::UpdateBones(const USkeletalMeshComponent* SkeletalMeshComp
 
     // 현재 애니메이션 본 행렬 계산
     TArray<FMatrix> CurrentGlobalBoneMatrices;
+    //TArray<FMatrix> CurrentGlobalBoneMatrices = SkeletalMeshComponent->PhysicsGlobalBoneMatrix;
     SkeletalMeshComponent->GetCurrentGlobalBoneMatrices(CurrentGlobalBoneMatrices);
     
     // 최종 스키닝 행렬 계산

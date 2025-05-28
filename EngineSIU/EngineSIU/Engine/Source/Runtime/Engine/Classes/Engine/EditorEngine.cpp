@@ -317,7 +317,7 @@ void UEditorEngine::StartPhysicsViewer(FName SkeletalMeshName)
     ActiveWorld = PhysicsViewerWorld;
     PhysicsViewerWorld->WorldType = EWorldType::PhysicsViewer;
 
-    ASkeletalMeshActor* SkeletalActor = PhysicsViewerWorld->SpawnActor<ASkeletalMeshActor>();
+    AActor* SkeletalActor = PhysicsViewerWorld->SpawnActor<AActor>();
     SkeletalActor->SetActorTickInEditor(true);
     
     USkeletalMeshComponent* MeshComp = SkeletalActor->AddComponent<USkeletalMeshComponent>();
