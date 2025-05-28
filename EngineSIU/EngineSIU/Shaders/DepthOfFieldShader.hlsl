@@ -213,16 +213,16 @@ float4 PS_DebugCoC(PS_INPUT IN) : SV_Target
     // |CoC| < thresh 면 초점(흰색)
     if (abs(signedCoC) < 0.2)
     {
-        return float4(1, 1, 1, 1);
+        return float4(0, 0, 0, 0.9);
     }
     // 음수면 전경 (녹색)
     else if (signedCoC < 0.0f)
     {
-        return float4(0, 1, 0, 1);
+        return float4(0, 1, 0, 0.9);
     }
     // 양수면 배경 (파란색)
     else
     {
-        return float4(0, 0, 1, 1);
+        return float4(0, 0, 1, 0.9);
     }
 }
