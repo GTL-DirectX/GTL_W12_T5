@@ -231,6 +231,7 @@ void UPrimitiveComponent::GetProperties(TMap<FString, FString>& OutProperties) c
     OutProperties.Add(TEXT("m_Type"), m_Type);
     OutProperties.Add(TEXT("AABB_min"), AABB.MinLocation.ToString());
     OutProperties.Add(TEXT("AABB_max"), AABB.MaxLocation.ToString());
+    OutProperties.Add(TEXT("PhysicsBodyType"), FString::FromInt(static_cast<int32>(PhysicsBodyType))); // PhysicsBodyType이 enum이라고 가정
 }
 
 void UPrimitiveComponent::SetProperties(const TMap<FString, FString>& InProperties)
@@ -259,6 +260,12 @@ void UPrimitiveComponent::SetProperties(const TMap<FString, FString>& InProperti
     if (AABBmaxStr)
     {
         AABB.MaxLocation.InitFromString(*AABBmaxStr);
+    }
+
+    const FString* PhysicsBodyTypeStr = InProperties.Find(TEXT("PhysicsBodyType"));
+    if (PhysicsBodyTypeStr)
+    {
+        PhysicsBodyType = static_cast<EPhysicsBodyType>(FString::ToInt(*PhysicsBodyTypeStr));
     }
 }
 
