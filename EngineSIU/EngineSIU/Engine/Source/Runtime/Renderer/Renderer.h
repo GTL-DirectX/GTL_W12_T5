@@ -15,6 +15,7 @@
 #include "D3D11RHI/DXDBufferManager.h"
 
 
+class FPhysicsDebugRenderPass;
 class FParticleMeshRenderPass;
 class FParticleSpriteRenderPass;
 class FTranslucentRenderPass;
@@ -111,6 +112,8 @@ public:
 
     FParticleSpriteRenderPass* ParticleSpriteRenderPass = nullptr;
     FParticleMeshRenderPass* ParticleMeshRenderPass = nullptr;
+
+    FPhysicsDebugRenderPass* PhysicsDebugRenderPass = nullptr;
     
     FDepthPrePass* DepthPrePass = nullptr;
     FTileLightCullingPass* TileLightCullingPass = nullptr;
