@@ -65,6 +65,7 @@ void USkeletalMeshComponent::BeginPlay()
     Super::BeginPlay();
 
     InitPhysicsBodies();
+    //ActivateRagdoll();
 }
 
 void USkeletalMeshComponent::TickComponent(float DeltaTime)
@@ -464,7 +465,7 @@ void USkeletalMeshComponent::UpdateFromPhysics(float DeltaTime)
 
     Super::UpdateFromPhysics(DeltaTime);
 
-    if (!bRagdollActivated || !SkeletalMeshAsset || !SkeletalMeshAsset->GetSkeleton())
+    if (/*!bRagdollActivated || */!SkeletalMeshAsset || !SkeletalMeshAsset->GetSkeleton())
     {
         return;
     }
