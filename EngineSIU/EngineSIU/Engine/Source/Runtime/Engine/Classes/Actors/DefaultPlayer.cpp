@@ -22,12 +22,12 @@ void ADefaultPlayer::PostSpawnInitialize()
 
 void ADefaultPlayer::SetUpPlayerInputComponent(UInputComponent* InInputComponent)
 {
-    InInputComponent->BindAction("W", [this](float DeltaTime) { MoveForward(DeltaTime); });
-    InInputComponent->BindAction("S", [this](float DeltaTime) { MoveForward(-DeltaTime); });
-    InInputComponent->BindAction("A", [this](float DeltaTime) { MoveRight(-DeltaTime); });
-    InInputComponent->BindAction("D", [this](float DeltaTime) { MoveRight(DeltaTime); });
-    InInputComponent->BindAction("Q", [this](float DeltaTime) { MoveUp(DeltaTime); });
-    InInputComponent->BindAction("E", [this](float DeltaTime) { MoveUp(-DeltaTime); });
+    InInputComponent->BindAction("EditorW", [this](float DeltaTime) { MoveForward(DeltaTime); });
+    InInputComponent->BindAction("EditorS", [this](float DeltaTime) { MoveForward(-DeltaTime); });
+    InInputComponent->BindAction("EditorA", [this](float DeltaTime) { MoveRight(-DeltaTime); });
+    InInputComponent->BindAction("EditorD", [this](float DeltaTime) { MoveRight(DeltaTime); });
+    InInputComponent->BindAction("EditorQ", [this](float DeltaTime) { MoveUp(DeltaTime); });
+    InInputComponent->BindAction("EditorE", [this](float DeltaTime) { MoveUp(-DeltaTime); });
 
     InInputComponent->BindAxis("Turn", [this](float DeltaTime) { RotateYaw(DeltaTime); });
     InInputComponent->BindAxis("LookUp", [this](float DeltaTime) { RotatePitch(DeltaTime); });    

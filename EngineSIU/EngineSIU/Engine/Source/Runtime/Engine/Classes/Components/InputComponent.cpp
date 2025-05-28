@@ -7,27 +7,27 @@ void UInputComponent::ProcessInput(float DeltaTime)
     {
         if (PressedKeys.Contains(EKeys::W))
         {
-            KeyBindDelegate[FString("W")].Broadcast(DeltaTime);
+            KeyBindDelegate[FString("EditorW")].Broadcast(DeltaTime);
         }
         if (PressedKeys.Contains(EKeys::A))
         {
-            KeyBindDelegate[FString("A")].Broadcast(DeltaTime);
+            KeyBindDelegate[FString("EditorA")].Broadcast(DeltaTime);
         }
         if (PressedKeys.Contains(EKeys::S))
         {
-            KeyBindDelegate[FString("S")].Broadcast(DeltaTime);
+            KeyBindDelegate[FString("EditorS")].Broadcast(DeltaTime);
         }
         if (PressedKeys.Contains(EKeys::D))
         {
-            KeyBindDelegate[FString("D")].Broadcast(DeltaTime);
+            KeyBindDelegate[FString("EditorD")].Broadcast(DeltaTime);
         }
         if (PressedKeys.Contains(EKeys::Q))
         {
-            KeyBindDelegate[FString("Q")].Broadcast(DeltaTime);
+            KeyBindDelegate[FString("EditorQ")].Broadcast(DeltaTime);
         }
         if (PressedKeys.Contains(EKeys::E))
         {
-            KeyBindDelegate[FString("E")].Broadcast(DeltaTime);
+            KeyBindDelegate[FString("EditorE")].Broadcast(DeltaTime);
         }
     }
 }
