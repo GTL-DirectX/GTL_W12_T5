@@ -114,7 +114,10 @@ void UPhysicsAsset::CreatePhysicsInstance(UWorld* World, USkeletalMeshComponent*
     const uint32 ComponentId = SkeletalMeshComponent->GetUUID();
 
     const FReferenceSkeleton& RefSkeleton = SkeletalMeshComponent->GetSkeletalMeshAsset()->GetSkeleton()->GetReferenceSkeleton();
-
+    TArray<FMatrix> GlobalBoneMatrices;
+    SkeletalMeshComponent->GetCurrentGlobalBoneMatrices(GlobalBoneMatrices);
+    FMatrix ComponentWolrdMatrix =  SkeletalMeshComponent->GetWorldMatrix();
+    
     for (int i = 0; i < NumBodies; ++i)
     {
         USkeletalBodySetup* BodySetup = SkeletalBodySetups[i];
@@ -130,14 +133,18 @@ void UPhysicsAsset::CreatePhysicsInstance(UWorld* World, USkeletalMeshComponent*
             continue; // 본이 유효하지 않으면 건너뜀
         }
 
-        const FTransform LocalBoneTM = RefSkeleton.GetRawRefBonePose()[BoneIndex];
-        const FTransform WorldBoneTM = LocalBoneTM * SkeletalMeshComponent->GetComponentTransform();
+
+
+        //FTransform GlobalBoneTransform = FTransform(GlobalBoneMatrices[BoneIndex]);
+
+        const FMatrix LocalBoneTM = FMatrix(GlobalBoneMatrices[BoneIndex]);
+        const FMatrix WorldBoneTM = LocalBoneTM * ComponentWolrdMatrix;
         
         FBodyInstance* NewBody = new FBodyInstance();
         NewBody->BodySetup = BodySetup;
         NewBody->InstanceBodyIndex = i;
         NewBody->ComponentId = ComponentId; // 컴포넌트 ID 설정
-        NewBody->InitBody(World->GetPhysicsScene(), WorldBoneTM, SkeletalMeshComponent);
+        NewBody->InitBody(World->GetPhysicsScene(), FTransform(WorldBoneTM), SkeletalMeshComponent);
         OutBodies[i] = NewBody;
     }
 
