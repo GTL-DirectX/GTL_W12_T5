@@ -150,3 +150,37 @@ void FPhysXManager::DestroyScene(PxScene* Scene)
         Scene = nullptr;
     }
 }
+
+void FPhysXManager::ClearPxScene(physx::PxScene* Scene)
+{
+    if (!Scene)
+    {
+        return;
+    }
+
+    // 쓰기 잠금 (씬 수정 시 필요)
+    // Scene->lockWrite(); // PhysX 3.x
+    // PhysX 4.x 이상에서는 simulate/fetchResults 외부에서의 수정은 일반적으로 안전하지만,
+    // 명시적인 동기화가 필요하다면 적절한 락 사용 고려.
+    // 여기서는 간단히 액터 제거만 수행.
+
+    const physx::PxU32 MaxActorsToFetch = 2048; // 한 번에 가져올 최대 액터 수 (필요에 따라 조절)
+    physx::PxActor* UserBuffer[MaxActorsToFetch];
+
+    physx::PxU32 NbActors = 0;
+    do
+    {
+        // PxActorTypeFlag::eRIGID_STATIC | PxActorTypeFlag::eRIGID_DYNAMIC 등을 사용하여 특정 타입만 가져올 수도 있음
+        NbActors = Scene->getActors(physx::PxActorTypeFlag::eRIGID_STATIC | physx::PxActorTypeFlag::eRIGID_DYNAMIC, UserBuffer, MaxActorsToFetch);
+        for (physx::PxU32 i = 0; i < NbActors; ++i)
+        {
+            physx::PxActor* Actor = UserBuffer[i];
+            Scene->removeActor(*Actor); // 씬에서 액터 제거
+            // Actor->release(); // 중요: 액터를 씬에서 제거한 후, 해당 액터 객체 자체도 release 해야 메모리 누수가 발생하지 않습니다.
+            // 단, 이 액터가 다른 곳에서 여전히 참조되고 있다면 release 시점을 조절해야 합니다.
+            // 만약 이 액터들이 PhysicsViewer 전용으로 생성된 임시 객체라면 여기서 release하는 것이 맞습니다.
+        }
+    } while (NbActors == MaxActorsToFetch); // 모든 액터를 가져올 때까지 반복
+
+    // Scene->unlockWrite(); // PhysX 3.x
+}

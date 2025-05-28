@@ -9,6 +9,7 @@
 #include "Physics/ConstraintInstance.h"
 #include "Physics/PhysicsAsset.h"
 #include "Physics/PhysicsConstraintTemplate.h"
+#include "Physics/PhysXManager.h"
 #include "UnrealEd/ImGuiWidget.h"
 
 PhysicsAssetEditorPanel::PhysicsAssetEditorPanel()
@@ -36,6 +37,17 @@ void PhysicsAssetEditorPanel::Render()
     {
         SetSkeletalMesh(SkeletalMeshComponent->GetSkeletalMeshAsset());
     }
+    
+    // TODO 월드 틱으로 옮겨야 할 듯
+    if (Engine->ActiveWorld->WorldType == EWorldType::PhysicsViewer and CurrentPhysicsAsset != nullptr)
+    {
+        physx::PxScene* ViewerPxScene = Engine->ActiveWorld->GetPhysicsScene(); // 이 월드의 PxScene 가져오기
+        // 1. 기존 PhysicsViewer PxScene의 모든 액터 제거
+        FPhysXManager::Get().ClearPxScene(ViewerPxScene); // 위에서 정의한 함수 사용
+
+        SkeletalMeshComponent->InitPhysicsBodies();
+    }
+
     
     // if (!Engine || !CurrentPhysicsAsset)
     // {

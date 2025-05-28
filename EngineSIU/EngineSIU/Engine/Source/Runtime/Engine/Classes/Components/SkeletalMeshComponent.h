@@ -154,8 +154,8 @@ public:
     void ActivateRagdoll();
     void DeactivateRagdoll();
 
-private:
     void InitPhysicsBodies();
+private:
 
 private:
     UPROPERTY(EditAnywhere, bool, bRagdollActivated, = false)
