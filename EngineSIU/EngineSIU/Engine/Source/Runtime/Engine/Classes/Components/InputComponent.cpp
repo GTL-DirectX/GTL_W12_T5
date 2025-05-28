@@ -1,30 +1,34 @@
 #include "InputComponent.h"
+#include "WindowsCursor.h"
 
 void UInputComponent::ProcessInput(float DeltaTime)
 {
-    if (PressedKeys.Contains(EKeys::W))
+    if (PressedKeys.Contains(EKeys::RightMouseButton))
     {
-        KeyBindDelegate[FString("W")].Broadcast(DeltaTime);
-    }
-    if (PressedKeys.Contains(EKeys::A))
-    {
-        KeyBindDelegate[FString("A")].Broadcast(DeltaTime);
-    }
-    if (PressedKeys.Contains(EKeys::S))
-    {
-        KeyBindDelegate[FString("S")].Broadcast(DeltaTime);
-    }
-    if (PressedKeys.Contains(EKeys::D))
-    {
-        KeyBindDelegate[FString("D")].Broadcast(DeltaTime);
-    }
-    if (PressedKeys.Contains(EKeys::Q))
-    {
-        KeyBindDelegate[FString("Q")].Broadcast(DeltaTime);
-    }
-    if (PressedKeys.Contains(EKeys::E))
-    {
-        KeyBindDelegate[FString("E")].Broadcast(DeltaTime);
+        if (PressedKeys.Contains(EKeys::W))
+        {
+            KeyBindDelegate[FString("W")].Broadcast(DeltaTime);
+        }
+        if (PressedKeys.Contains(EKeys::A))
+        {
+            KeyBindDelegate[FString("A")].Broadcast(DeltaTime);
+        }
+        if (PressedKeys.Contains(EKeys::S))
+        {
+            KeyBindDelegate[FString("S")].Broadcast(DeltaTime);
+        }
+        if (PressedKeys.Contains(EKeys::D))
+        {
+            KeyBindDelegate[FString("D")].Broadcast(DeltaTime);
+        }
+        if (PressedKeys.Contains(EKeys::Q))
+        {
+            KeyBindDelegate[FString("Q")].Broadcast(DeltaTime);
+        }
+        if (PressedKeys.Contains(EKeys::E))
+        {
+            KeyBindDelegate[FString("E")].Broadcast(DeltaTime);
+        }
     }
 }
 
@@ -51,16 +55,26 @@ void UInputComponent::BindInputDelegate()
     BindMouseMoveDelegateHandles.Add(Handler->OnMouseMoveDelegate.AddLambda([this](const FPointerEvent& InMouseEvent)
         {
             const FVector2D& Delta = InMouseEvent.GetCursorDelta();
-            
-            if (MouseBindDelegate.Contains(FString("Turn")))
+
+            if (PressedKeys.Contains(EKeys::RightMouseButton))
             {
-                MouseBindDelegate[FString("Turn")].Broadcast(Delta.X);
+                if (MouseBindDelegate.Contains("Turn"))
+                {
+                    MouseBindDelegate["Turn"].Broadcast(Delta.X);
+                }
+
+                if (MouseBindDelegate.Contains("LookUp"))
+                {
+                    MouseBindDelegate["LookUp"].Broadcast(Delta.Y);
+                }
             }
-            
-            if (MouseBindDelegate.Contains(FString("LookUp")))
-            {
-                MouseBindDelegate[FString("LookUp")].Broadcast(Delta.Y);
-            }
+        }));
+
+    BindMouseDownDelegateHandles.Add(Handler->OnMouseDownDelegate.AddLambda([this](const FPointerEvent& InMouseEvent) {
+        InputMouse(InMouseEvent);
+        }));
+    BindMouseUpDelegateHandles.Add(Handler->OnMouseUpDelegate.AddLambda([this](const FPointerEvent& InMouseEvent) {
+        InputMouse(InMouseEvent);
         }));
 }
 
@@ -87,10 +101,20 @@ void UInputComponent::ClearBindDelegate()
     {
         Handler->OnMouseMoveDelegate.Remove(DelegateHandle);
     }
+    for (FDelegateHandle DelegateHandle : BindMouseDownDelegateHandles)
+    {
+        Handler->OnMouseDownDelegate.Remove(DelegateHandle);
+    }
+    for (FDelegateHandle DelegateHandle : BindMouseUpDelegateHandles)
+    {
+        Handler->OnMouseUpDelegate.Remove(DelegateHandle);
+    }
 
     BindKeyDownDelegateHandles.Empty();
     BindKeyUpDelegateHandles.Empty();
-    BindKeyDownDelegateHandles.Empty();
+    BindMouseMoveDelegateHandles.Empty();
+    BindMouseDownDelegateHandles.Empty();
+    BindMouseUpDelegateHandles.Empty();
 }
 
 void UInputComponent::InputKey(const FKeyEvent& InKeyEvent)
@@ -177,7 +201,24 @@ void UInputComponent::InputKey(const FKeyEvent& InKeyEvent)
 
 void UInputComponent::InputMouse(const FPointerEvent& InMouseEvent)
 {
-
+    if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
+    {
+        if (InMouseEvent.GetInputEvent() == IE_Pressed)
+        {
+            PressedKeys.Add(EKeys::RightMouseButton);
+            FWindowsCursor::SetShowMouseCursor(false);
+            MousePinPosition = InMouseEvent.GetScreenSpacePosition();
+        }
+        else if (InMouseEvent.GetInputEvent() == IE_Released)
+        {
+            PressedKeys.Remove(EKeys::RightMouseButton);
+            FWindowsCursor::SetShowMouseCursor(true);
+            FWindowsCursor::SetPosition(
+                static_cast<int32>(MousePinPosition.X),
+                static_cast<int32>(MousePinPosition.Y)
+            );
+        }
+    }
 }
 
 void UInputComponent::BindAction(const FString& Key, const std::function<void(float)>& Callback)

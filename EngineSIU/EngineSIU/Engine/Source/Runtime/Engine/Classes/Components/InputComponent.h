@@ -33,6 +33,9 @@ private:
     TArray<FDelegateHandle> BindKeyDownDelegateHandles;
     TArray<FDelegateHandle> BindKeyUpDelegateHandles;
     TArray<FDelegateHandle> BindMouseMoveDelegateHandles;
-
+    TArray<FDelegateHandle> BindMouseDownDelegateHandles;
+    TArray<FDelegateHandle> BindMouseUpDelegateHandles;
     TSet<EKeys::Type> PressedKeys;
+private:
+    FVector2D MousePinPosition;
 };
