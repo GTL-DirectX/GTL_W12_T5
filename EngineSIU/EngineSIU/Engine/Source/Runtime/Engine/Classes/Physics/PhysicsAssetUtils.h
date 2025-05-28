@@ -33,11 +33,11 @@ inline FVector FromPxVec3(const physx::PxVec3& PxVec)
 
 inline FLinearColor FromPxColor(physx::PxU32 PxColor)
 {
-    // PxDebug* 색상은 보통 ABGR 순서의 8비트 채널입니다.
+    // PxDebug* 색상은 보통 ARGB 순서의 8비트 채널입니다.
     float A = static_cast<float>((PxColor >> 24) & 0xFF) / 255.0f;
-    float B = static_cast<float>((PxColor >> 16) & 0xFF) / 255.0f;
+    float R = static_cast<float>((PxColor >> 16) & 0xFF) / 255.0f;
     float G = static_cast<float>((PxColor >> 8) & 0xFF) / 255.0f;
-    float R = static_cast<float>((PxColor) & 0xFF) / 255.0f;
+    float B = static_cast<float>((PxColor) & 0xFF) / 255.0f;
     return FLinearColor(R, G, B, A);
 }
 
