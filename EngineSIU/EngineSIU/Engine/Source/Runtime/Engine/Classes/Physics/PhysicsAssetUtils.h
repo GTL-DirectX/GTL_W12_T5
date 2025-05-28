@@ -1,10 +1,17 @@
-﻿#pragma once
+#pragma once
 
 #include <PxPhysicsAPI.h>
 
 #include "Math/Color.h"
 #include "Math/Transform.h"
 #include "Math/Matrix.h"
+
+#define SCOPED_READ_LOCK(Scene) PxSceneReadLock scopedReadLock(Scene); \
+    if (!ScopedReadLock.IsValid()) \
+    { \
+        UE_LOG(ELogLevel::Error, TEXT("PxSceneReadLock failed.")); \
+        return; \
+    }
 
 // PxVec3 = FVector;
 // PxQuat = FQuat;

@@ -11,7 +11,7 @@ ACube::ACube()
     if (!StaticMeshComponent->GetBodySetup())
     {
         StaticMeshComponent->GetStaticMesh()->SetBodySetup(FObjectFactory::ConstructObject<UBodySetup>(this));
-        StaticMeshComponent->GetBodySetup()->AddBoxElem(FKBoxElem(0.5f, 0.5f, 0.5f));
+        StaticMeshComponent->GetBodySetup()->AddBoxElem(FKBoxElem(100.5f, 0.5f, 100.5f));
         StaticMeshComponent->GetBodySetup()->AddSphereElem(FKSphereElem(1.f));
     }
         StaticMeshComponent->GetBodySetup()->AggGeom.SphylElems.Add(FKSphylElem(0.5f, 1.f));

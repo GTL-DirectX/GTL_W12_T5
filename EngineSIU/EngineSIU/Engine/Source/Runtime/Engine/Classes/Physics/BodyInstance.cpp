@@ -115,8 +115,8 @@ void FBodyInstance::InitBody(PxScene* Scene, const FTransform& InitWorldTransfor
         Shape->setLocalPose(SphylLocalPose);
         Shape->setSimulationFilterData(FilterData);
 
-        Shape->setRestOffset(SphylElem.RestOffset);
-        Shape->setContactOffset(SphylElem.RestOffset + 0.5f);
+        /*Shape->setRestOffset(SphylElem.RestOffset);
+        Shape->setContactOffset(SphylElem.RestOffset + 0.5f);*/
 
         PxRigidActor->attachShape(*Shape);
         Shape->release();
@@ -134,6 +134,7 @@ void FBodyInstance::InitBody(PxScene* Scene, const FTransform& InitWorldTransfor
 
     Scene->addActor(*PxRigidActor);
     bInitialized = true;
+    Owner->UpdateFromPhysics(0.0f); // 초기화 후 바로 업데이트하여 위치 동기화
 }
 
 void FBodyInstance::UpdateComponentTransform(class UPrimitiveComponent* Owner, float DeltaTime)

@@ -51,7 +51,7 @@ void FPhysXManager::InitPhysX()
         return;
     }
 
-    CpuDispatcher = PxDefaultCpuDispatcherCreate(2); // 2개 스레드
+    CpuDispatcher = PxDefaultCpuDispatcherCreate(4); // 4개 스레드
     if (!CpuDispatcher)
     {
         UE_LOG(ELogLevel::Error, TEXT("Failed to create PxDefaultCpuDispatcher!"));
@@ -124,6 +124,9 @@ PxScene* FPhysXManager::CreateScene()
 
     SceneDesc.cpuDispatcher = CpuDispatcher;
     SceneDesc.filterShader = NoCollisionSelfFilterShader;
+    SceneDesc.flags |= PxSceneFlag::eENABLE_ACTIVE_ACTORS; // 활성 액터만 업데이트
+    SceneDesc.flags |= PxSceneFlag::eENABLE_PCM; // Contact Preprocessing, 충돌 사전 처리 활성화
+    SceneDesc.flags |= PxSceneFlag::eENABLE_CCD; // Continuous Collision Detection 활성화
 
     PxScene* NewScene = Physics->createScene(SceneDesc);
     if (!NewScene)

@@ -46,7 +46,8 @@ void PhysicsAssetEditorPanel::Render()
         // 1. 기존 PhysicsViewer PxScene의 모든 액터 제거
         FPhysXManager::Get().ClearPxScene(ViewerPxScene); // 위에서 정의한 함수 사용
 
-        SkeletalMeshComponent->InitPhysicsBodies();
+        if (SkeletalMeshComponent)
+            SkeletalMeshComponent->InitPhysicsBodies();
     }
 
     
@@ -245,7 +246,7 @@ void PhysicsAssetEditorPanel::RenderDetailsPanel()
         RenderObjectDetails(SelectedBodySetup); // UBodySetup (및 USkeletalBodySetup)의 프로퍼티 표시
         RenderConstraintCreationUI(SelectedBodySetup->BoneName, TEXT("FromSelectedBodySetup")); // UiContextId 전달
 
-        if (ImGui::Button(*FString::Printf(TEXT("Delete BodySetup: %s"), *SelectedBodySetup->BoneName.ToString())))
+        if (SelectedBodySetup && ImGui::Button(*FString::Printf(TEXT("Delete BodySetup: %s"), *SelectedBodySetup->BoneName.ToString())))
         {
             HandleDeleteSelectedBodySetup(); // 삭제 핸들러 호출
             return; // 중요: 삭제 후에는 이 프레임에서 더 이상 이 객체에 접근하지 않도록 함

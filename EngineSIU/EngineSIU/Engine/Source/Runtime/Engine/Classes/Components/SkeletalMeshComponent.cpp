@@ -15,6 +15,7 @@
 #include "Engine/Engine.h"
 #include "UObject/Casts.h"
 #include "UObject/ObjectFactory.h"
+#include "World/World.h"
 
 bool USkeletalMeshComponent::bIsCPUSkinning = false;
 
@@ -459,6 +460,8 @@ void USkeletalMeshComponent::CPUSkinning(bool bForceUpdate)
 
 void USkeletalMeshComponent::UpdateFromPhysics(float DeltaTime)
 {
+    //SCOPED_READ_LOCK(GetWorld()->GetPhysicsScene())
+
     Super::UpdateFromPhysics(DeltaTime);
 
     if (!bRagdollActivated || !SkeletalMeshAsset || !SkeletalMeshAsset->GetSkeleton())
