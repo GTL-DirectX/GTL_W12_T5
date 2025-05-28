@@ -42,9 +42,18 @@ void FDepthOfFieldPass::Render(const std::shared_ptr<FEditorViewportClient>& Vie
     Graphics->DeviceContext->Draw(6, 0);
     CleanUpBlurFarPass(Viewport);
 
-    PrepareCompositePass(Viewport);
-    Graphics->DeviceContext->Draw(6, 0);
-    CleanUpCompositePass(Viewport);
+    if (!(Viewport->GetShowFlag() & EEngineShowFlags::SF_DepthOfField_DebugLayer))
+    {
+        PrepareCompositePass(Viewport);
+        Graphics->DeviceContext->Draw(6, 0);
+        CleanUpCompositePass(Viewport);
+    }
+    else if (Viewport->GetShowFlag() & EEngineShowFlags::SF_DepthOfField_DebugLayer)
+    {
+        PrepareDebugPass(Viewport);
+        Graphics->DeviceContext->Draw(6, 0);
+        CleanUpDebugPass(Viewport);
+    }
 
     CleanUpRender(Viewport);
 }
@@ -102,6 +111,11 @@ void FDepthOfFieldPass::CreateShader()
         UE_LOG(ELogLevel::Error, TEXT("Failed to create DepthOfFieldPixelShader shader!"));
     }
 
+    hr = ShaderManager->AddPixelShader(L"PS_DebugCoC", L"Shaders/DepthOfFieldShader.hlsl", "PS_DebugCoC");
+    if (FAILED(hr))
+    {
+        UE_LOG(ELogLevel::Error, TEXT("Failed to create DepthOfFieldPixelShader shader!"));
+    }
 }
 
 void FDepthOfFieldPass::UpdateDoFConstant(const std::shared_ptr<FEditorViewportClient>& Viewport)
@@ -248,5 +262,28 @@ void FDepthOfFieldPass::CleanUpCompositePass(const std::shared_ptr<FEditorViewpo
     Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_Scene), 1, NullSRV);
     Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_BlurNear), 1, NullSRV);
     Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_BlurFar), 1, NullSRV);
+
+}
+
+void FDepthOfFieldPass::PrepareDebugPass(const std::shared_ptr<FEditorViewportClient>& Viewport)
+{
+    ID3D11PixelShader* PixelShader = ShaderManager->GetPixelShaderByKey(L"PS_DebugCoC");
+    Graphics->DeviceContext->PSSetShader(PixelShader, nullptr, 0);    
+
+    FViewportResource* ViewportResource = Viewport->GetViewportResource();
+    const EResourceType ResourceType = EResourceType::ERT_DoF_Result;
+    FRenderTargetRHI* RenderTargetRHI = ViewportResource->GetRenderTarget(ResourceType);
+
+    Graphics->DeviceContext->OMSetDepthStencilState(nullptr, 1);
+    Graphics->DeviceContext->OMSetRenderTargets(1, &RenderTargetRHI->RTV, nullptr);
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_CoC), 1, &ViewportResource->GetRenderTarget(EResourceType::ERT_DoF_CoC)->SRV);
+
+}
+
+void FDepthOfFieldPass::CleanUpDebugPass(const std::shared_ptr<FEditorViewportClient>& Viewport)
+{
+    Graphics->DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+    ID3D11ShaderResourceView* NullSRV[1] = { nullptr };
+    Graphics->DeviceContext->PSSetShaderResources(static_cast<UINT>(EShaderSRVSlot::SRV_DoF_CoC), 1, NullSRV);
 
 }
