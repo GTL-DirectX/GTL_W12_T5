@@ -145,7 +145,9 @@ inline FArchive& operator<<(FArchive& Ar, FConstraintInstance& Value)
     int TwistMotion  = static_cast<int>(Value.TwistMotion);
     
     
-    Ar 
+    Ar  << Value.JointName
+        << Value.ConstraintBone1
+        << Value.ConstraintBone2
         << Value.ConstraintIndex
         << Value.Frame1.Position
         << Value.Frame1.PriAxis

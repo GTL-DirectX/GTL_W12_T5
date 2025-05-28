@@ -32,7 +32,7 @@ void USkeletalMesh::SerializeAsset(FArchive& Ar)
 void USkeletalMesh::CreateOrBindPhysicsAsset()
 {
     
-    PhysicsAsset = UAssetManager::Get().GetPhysicsAsset(RenderData->ObjectName + TEXT("_PhysicsAsset"));
+    PhysicsAsset = UAssetManager::Get().GetPhysicsAsset(RenderData->ObjectName + TEXT("_PhysicsAsset.physbin"));
 
     if (PhysicsAsset == nullptr)
     {
