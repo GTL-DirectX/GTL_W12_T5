@@ -44,14 +44,14 @@ void FPhysXManager::InitPhysX()
     PxInitExtensions(*Physics, PvdInstance);
 
     // Cooking 생성 (Convex Mesh, Triangle Mesh 등 cook 용)
-    PxCookingParams CookingParams(Scale);
-    CookingParams.meshPreprocessParams = PxMeshPreprocessingFlag::eWELD_VERTICES;
-    Cooking = PxCreateCooking(PX_PHYSICS_VERSION, *Foundation, CookingParams);
-    if (!Cooking)
-    {
-        UE_LOG(ELogLevel::Error, TEXT("Failed to create PxCooking!"));
-        return;
-    }
+    //PxCookingParams CookingParams(Scale);
+    //CookingParams.meshPreprocessParams = PxMeshPreprocessingFlag::eWELD_VERTICES;
+    //Cooking = PxCreateCooking(PX_PHYSICS_VERSION, *Foundation, CookingParams);
+    //if (!Cooking)
+    //{
+    //    UE_LOG(ELogLevel::Error, TEXT("Failed to create PxCooking!"));
+    //    return;
+    //}
 
     CpuDispatcher = PxDefaultCpuDispatcherCreate(4); // 4개 스레드
     if (!CpuDispatcher)
