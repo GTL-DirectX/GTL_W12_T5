@@ -46,6 +46,8 @@ public:
     template<typename T>
     HRESULT CreateDynamicVertexBuffer(const FString& KeyName, const TArray<T>& Vertices, FVertexInfo& OutVertexInfo);
 
+    // HRESULT CreateDynamicVertexBuffer(const FString& KeyName, uint32 Stride, uint32_t NumVertices, FVertexInfo& OutVertexInfo);
+
     // 템플릿 헬퍼 함수: 내부에서 버퍼 생성 로직 통합
     template<typename T>
     HRESULT CreateVertexBufferInternal(const FString& KeyName, const TArray<T>& Vertices, FVertexInfo& OutVertexInfo,
@@ -98,6 +100,9 @@ public:
 
     void GetQuadBuffer(FVertexInfo& OutVertexInfo, FIndexInfo& OutIndexInfo);
     void GetTextBuffer(const FWString& Text, FVertexInfo& OutVertexInfo, FIndexInfo& OutIndexInfo);
+    HRESULT UpdateOrCreateDynamicVertexBuffer(
+        const FString& KeyName, const void* pVertexData, uint32_t Stride, uint32_t NumVertices, FVertexInfo& OutVertexInfo
+    );
     void CreateQuadBuffer();
     
 private:
@@ -275,6 +280,8 @@ HRESULT FDXDBufferManager::CreateDynamicVertexBuffer(const FString& KeyName, con
 {
     return CreateVertexBufferInternal(KeyName, Vertices, OutVertexInfo, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 }
+
+
 
 template<typename T>
 HRESULT FDXDBufferManager::CreateBufferGeneric(const FString& KeyName, T* Data, UINT ByteWidth, UINT BindFlags, D3D11_USAGE Usage, UINT CpuAccessFlags)

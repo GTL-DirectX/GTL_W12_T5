@@ -6,10 +6,27 @@
 
 struct FKAggregateGeom
 {
-    TArray<FKSphereElem> SphereElems;
-    TArray<FKBoxElem> BoxElems;
-    TArray<FKSphylElem> SphylElems;
-    TArray<FKConvexElem> ConvexElems;
+    DECLARE_STRUCT(FKAggregateGeom)
+    
+    UPROPERTY(
+        EditAnywhere,
+        TArray<FKSphereElem>, SphereElems, {};
+    )
+    
+    UPROPERTY(
+        EditAnywhere,
+        TArray<FKBoxElem>, BoxElems, {};
+    )
+    
+    UPROPERTY(
+        EditAnywhere,
+        TArray<FKSphylElem>, SphylElems, {};
+    )
+    
+    UPROPERTY(
+        EditAnywhere,
+        TArray<FKConvexElem>, ConvexElems, {};
+    )
 
     friend FArchive& operator<<(FArchive& Ar, FKAggregateGeom& V);
 

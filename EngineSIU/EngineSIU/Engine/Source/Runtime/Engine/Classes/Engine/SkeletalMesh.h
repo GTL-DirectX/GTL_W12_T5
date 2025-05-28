@@ -12,6 +12,8 @@ public:
     USkeletalMesh() = default;
     virtual ~USkeletalMesh() override = default;
 
+    virtual UObject* Duplicate(UObject* InOuter) override;
+
     void SetRenderData(std::unique_ptr<FSkeletalMeshRenderData> InRenderData);
 
     const FSkeletalMeshRenderData* GetRenderData() const;
@@ -22,8 +24,10 @@ public:
 
     virtual void SerializeAsset(FArchive& Ar) override;
 
-    class UPhysicsAsset* PhysicsAsset;
+    void CreateOrBindPhysicsAsset();
 
+    class UPhysicsAsset* PhysicsAsset = nullptr;
+  
 protected:
     std::unique_ptr<FSkeletalMeshRenderData> RenderData;
 

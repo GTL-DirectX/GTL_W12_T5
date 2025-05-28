@@ -1,13 +1,7 @@
 #include "Cube.h"
 
-#include "Components/BoxComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
-
 #include "Engine/FObjLoader.h"
-#include "GameFramework/Actor.h"
-
 #include "Physics/BodySetup.h"
 
 ACube::ACube()
@@ -18,7 +12,9 @@ ACube::ACube()
     {
         StaticMeshComponent->GetStaticMesh()->SetBodySetup(FObjectFactory::ConstructObject<UBodySetup>(this));
         StaticMeshComponent->GetBodySetup()->AddBoxElem(FKBoxElem(0.5f, 0.5f, 0.5f));
+        StaticMeshComponent->GetBodySetup()->AddSphereElem(FKSphereElem(1.f));
     }
+        StaticMeshComponent->GetBodySetup()->AggGeom.SphylElems.Add(FKSphylElem(0.5f, 1.f));
     
 }
 

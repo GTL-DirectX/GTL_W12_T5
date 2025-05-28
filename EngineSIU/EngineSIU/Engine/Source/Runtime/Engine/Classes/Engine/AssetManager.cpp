@@ -98,6 +98,11 @@ UParticleSystem* UAssetManager::GetParticleSystem(const FName& Name) const
     return Cast<UParticleSystem>(GetAsset(EAssetType::ParticleSystem, Name));
 }
 
+UPhysicsAsset* UAssetManager::GetPhysicsAsset(const FName& Name) const
+{
+    return Cast<UPhysicsAsset>(GetAsset(EAssetType::PhysicsAsset, Name));
+}
+
 void UAssetManager::GetMaterialKeys(TSet<FName>& OutKeys) const
 {
     OutKeys.Empty();
@@ -120,7 +125,7 @@ void UAssetManager::GetMaterialKeys(TArray<FName>& OutKeys) const
 
 void UAssetManager::AddAssetInfo(const FAssetInfo& Info)
 {
-    AssetRegistry->PathNameToAssetInfo.Add(Info.AssetName, Info);
+    AssetRegistry->PathNameToAssetInfo.Add(Info.SourceFilePath, Info);
 }
 
 void UAssetManager::AddSkeleton(const FName& Key, USkeleton* Skeleton)
@@ -197,13 +202,14 @@ void UAssetManager::LoadContentFiles()
             AssetInfo.AssetType = EAssetType::PhysicsAsset;
             AssetInfo.AssetName = FName(Entry.path().filename().generic_string());
 
-            HandlePhysicsAsset(AssetInfo, false);
+            LoadPhysicsAsset(AssetInfo);
         }
 
     }
 
     OutputDebugStringA(std::format("FBX Load Time: {:.2f} s\nBinary Load Time: {:.2f} s", FbxLoadTime / 1000.0, BinaryLoadTime / 1000.0).c_str());
 }
+
 
 void UAssetManager::HandleFBX(const FAssetInfo& AssetInfo)
 {
@@ -287,10 +293,48 @@ void UAssetManager::HandleFBX(const FAssetInfo& AssetInfo)
     }
 }
 
-void UAssetManager::HandlePhysicsAsset(const FAssetInfo& AssetInfo, bool bIsSave)
+void UAssetManager::SavePhysicsAssets(UPhysicsAsset* PhysicsAsset, const FString& InAssetPath)
 {
-    // TODO : ControlEditorPanel Viwer Open과 코드 중복 다수
-    // 경로, 이름 준비
+    FAssetInfo AssetInfo = {};
+    std::filesystem::path Entry(*InAssetPath);
+    
+    AssetInfo.SourceFilePath = Entry.generic_string() + ".physbin";
+    AssetInfo.PackagePath = FName(Entry.parent_path().generic_string());
+    AssetInfo.AssetType = EAssetType::PhysicsAsset;
+    AssetInfo.AssetName = FName(Entry.filename().generic_string());
+
+    AddAssetInfo(AssetInfo);
+
+    FString BaseName;
+    FWString FilePath = AssetInfo.SourceFilePath.ToWideString();
+
+    FWString FolderPath = FilePath.substr(0, FilePath.find_last_of(L"\\/") + 1);
+    FWString FileName = FilePath.substr(FilePath.find_last_of(L"\\/") + 1);
+    size_t DotPos = FileName.find_last_of('.');
+    if (DotPos != std::string::npos)
+    {
+        BaseName = FileName.substr(0, DotPos);
+    }
+    else
+    {
+        BaseName = FileName;
+    }
+
+
+    FAssetLoadResult Result;
+    Result.PhysicsAssets.Add(PhysicsAsset);
+    
+    // 바이너리 작성
+    SavePhysicsAssetBinary(FilePath, Result, BaseName, FolderPath);
+    
+    AddToAssetMap(Result, BaseName, AssetInfo);
+}
+
+
+void UAssetManager::LoadPhysicsAsset(const FAssetInfo& AssetInfo)
+{
+    
+    
     FString BaseName;
 
     FWString FilePath = AssetInfo.SourceFilePath.ToWideString();
@@ -312,32 +356,24 @@ void UAssetManager::HandlePhysicsAsset(const FAssetInfo& AssetInfo, bool bIsSave
     LARGE_INTEGER EndTime;
     
     FAssetLoadResult Result;
-        
-    if (bIsSave == false)
-    {
-        
-        
-        QueryPerformanceCounter(&StartTime);
-        
-        // bin 파일 읽기
-        LoadPhysicsAssetBinary(BinFilePath, Result, BaseName, FolderPath);
-        QueryPerformanceCounter(&EndTime);
-        
-        LARGE_INTEGER Frequency;
-        QueryPerformanceFrequency(&Frequency);
-        {
-            BinaryLoadTime += (static_cast<double>(EndTime.QuadPart - StartTime.QuadPart) * 1000.f / static_cast<double>(Frequency.QuadPart));
-        }
-        
-        // 로드된 에셋 등록
-        AddToAssetMap(Result, BaseName, AssetInfo);
-    }
 
-    if (!bIsSave)
-    {
-        // 바이너리 작성
-        SavePhysicsAssetBinary(BinFilePath, Result, BaseName, FolderPath);
-    }
+     QueryPerformanceCounter(&StartTime);
+     
+     // bin 파일 읽기
+     LoadPhysicsAssetBinary(BinFilePath, Result, BaseName, FolderPath);
+     QueryPerformanceCounter(&EndTime);
+     
+     LARGE_INTEGER Frequency;
+     QueryPerformanceFrequency(&Frequency);
+     {
+         BinaryLoadTime += (static_cast<double>(EndTime.QuadPart - StartTime.QuadPart) * 1000.f / static_cast<double>(Frequency.QuadPart));
+     }
+     
+     // 로드된 에셋 등록
+     AddToAssetMap(Result, BaseName, AssetInfo);
+    
+
+
 }
 
 void UAssetManager::AddToAssetMap(const FAssetLoadResult& Result, const FString& BaseName, const FAssetInfo& BaseAssetInfo)
@@ -420,10 +456,8 @@ void UAssetManager::AddToAssetMap(const FAssetLoadResult& Result, const FString&
     for (int32 i = 0 ; i < Result.PhysicsAssets.Num(); ++i)
     {
         UPhysicsAsset* PhysicsAsset = Result.PhysicsAssets[i];
-        FString BaseAssetName = PhysicsAsset->GetName();
 
         FAssetInfo Info = BaseAssetInfo;
-        Info.AssetName = FName(BaseAssetName);
         Info.AssetType = EAssetType::PhysicsAsset;
         
         FString Key = Info.GetFullPath();
@@ -632,7 +666,7 @@ bool UAssetManager::SerializeAssetLoadResult(FArchive& Ar, FAssetLoadResult& Res
         PhysicsAssetNum = Result.PhysicsAssets.Num();
     }
 
-    Ar << MaterialNum << SkeletonNum << SkeletalMeshNum << StaticMeshNum << AnimationNum /* << PhysicsAssetNum */;
+    Ar << MaterialNum << SkeletonNum << SkeletalMeshNum << StaticMeshNum << AnimationNum  << PhysicsAssetNum ;
 
     // Load 과정에서 Key를 통해 오브젝트를 찾기 위한 맵
     TMap<FName, USkeleton*> TempSkeletonMap;
@@ -916,7 +950,7 @@ bool UAssetManager::SerializeAssetLoadResult(FArchive& Ar, FAssetLoadResult& Res
         FAssetInfo Info;
         if (Ar.IsSaving())
         {
-            FName Key = FolderPath / (i > 0 ? BaseName + FString::FromInt(i) : BaseName);
+            FName Key = FolderPath / (i > 0 ? BaseName + FString::FromInt(i) : BaseName) + ".physbin";
             if (AssetRegistry->PathNameToAssetInfo.Contains(Key))
             {
                 Info = AssetRegistry->PathNameToAssetInfo[Key];
@@ -931,7 +965,8 @@ bool UAssetManager::SerializeAssetLoadResult(FArchive& Ar, FAssetLoadResult& Res
         UPhysicsAsset* PhysicsAsset = nullptr;
         if (Ar.IsLoading())
         {
-            PhysicsAsset = FObjectFactory::ConstructObject<UPhysicsAsset>(nullptr, Info.AssetName);
+            
+            PhysicsAsset = FObjectFactory::ConstructObject<UPhysicsAsset>(nullptr, Info.PackagePath.ToString() + "/" + Info.AssetName.ToString());
             Result.PhysicsAssets.Add(PhysicsAsset);
         }
         else

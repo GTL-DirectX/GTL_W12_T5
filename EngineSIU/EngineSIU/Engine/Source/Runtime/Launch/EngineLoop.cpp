@@ -75,6 +75,7 @@ int32 FEngineLoop::Init(HINSTANCE hInstance)
     EngineProfiler.RegisterStatScope(TEXT("|- EditorBillboardPass"), FName(TEXT("EditorBillboardPass_CPU")), FName(TEXT("EditorBillboardPass_GPU")));
     EngineProfiler.RegisterStatScope(TEXT("|- EditorRenderPass"), FName(TEXT("EditorRenderPass_CPU")), FName(TEXT("EditorRenderPass_GPU")));
     EngineProfiler.RegisterStatScope(TEXT("|- LinePass"), FName(TEXT("LinePass_CPU")), FName(TEXT("LinePass_GPU")));
+    EngineProfiler.RegisterStatScope(TEXT("|- PhysicsDebugPass"), FName(TEXT("PhysicsDebugPass_CPU")), FName(TEXT("PhysicsDebugPass_GPU")));
     EngineProfiler.RegisterStatScope(TEXT("|- GizmoPass"), FName(TEXT("GizmoPass_CPU")), FName(TEXT("GizmoPass_GPU")));
     EngineProfiler.RegisterStatScope(TEXT("|- CompositingPass"), FName(TEXT("CompositingPass_CPU")), FName(TEXT("CompositingPass_GPU")));
     EngineProfiler.RegisterStatScope(TEXT("|- SkinningPass"), FName(TEXT("SkinningPass_CPU")), FName(TEXT("SkinningPass_GPU")));

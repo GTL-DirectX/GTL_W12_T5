@@ -12,18 +12,31 @@ struct FKBoxElem : public FKShapeElem
 {
     DECLARE_STRUCT(FKBoxElem, FKShapeElem)
 
-    // Position of Box's origin.
-    FVector Center;
+        UPROPERTY(
+    EditAnywhere,
+    FVector, Center, = FVector::ZeroVector;
+    )
+        UPROPERTY(
+    EditAnywhere,
+    FRotator, Rotation, = FRotator::ZeroRotator;
+    )
 
-    // Rotation of the Box.
-    FRotator Rotation;
+    UPROPERTY(
+    EditAnywhere,
+    float, X, = 1.0f;
+    )
 
-    // Extent of the Box along the X-axis.
-    float X;
-    // Extent of the Box along the Y-axis.
-    float Y;
-    // Extent of the Box along the Z-axis.
-    float Z;
+    UPROPERTY(
+    EditAnywhere,
+    float, Y, = 1.0f;
+    )
+
+    UPROPERTY(
+    EditAnywhere,
+    float, Z, = 1.0f;
+    )
+    
+
 
 
     FKBoxElem()

@@ -99,13 +99,30 @@ void FPhysXManager::ShutdonwPhysX()
     }
 }
 
+// 같은 CompId를 가진 객체끼리 충돌을 방지하는 필터 셰이더.
+static PxFilterFlags NoCollisionSelfFilterShader(PxFilterObjectAttributes attributes0,
+    PxFilterData filterData0,
+    PxFilterObjectAttributes attributes1,
+    PxFilterData filterData1,
+    PxPairFlags& pairFlags,
+    const void* constantBlock,
+    PxU32 constantBlockSize)
+{
+    if (filterData0.word0 != 0 && filterData0.word0 == filterData1.word0)
+    {
+        return PxFilterFlag::eSUPPRESS;
+    }
+    pairFlags = PxPairFlag::eCONTACT_DEFAULT;
+    return PxFilterFlags();
+}
+
 PxScene* FPhysXManager::CreateScene()
 {
     PxSceneDesc SceneDesc(Physics->getTolerancesScale());
     SceneDesc.gravity = PxVec3(0.0f, 0.0f, -9.81f);
 
     SceneDesc.cpuDispatcher = CpuDispatcher;
-    SceneDesc.filterShader = PxDefaultSimulationFilterShader;
+    SceneDesc.filterShader = NoCollisionSelfFilterShader;
 
     PxScene* NewScene = Physics->createScene(SceneDesc);
     if (!NewScene)

@@ -38,7 +38,7 @@ void UStaticMeshComponent::BeginPlay()
         if (UBodySetup* BodySetup = GetBodySetup())
         {
             BodyInstance.BodySetup = Mesh->GetBodySetup();
-            BodyInstance.InitBody(GetWorld()->GetPhysicsScene(), this);
+            BodyInstance.InitBody(GetWorld()->GetPhysicsScene(), GetComponentTransform(), this);
         }
     }
 }

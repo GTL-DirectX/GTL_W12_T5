@@ -34,14 +34,22 @@ class UBodySetup : public UBodySetupCore
 public:
     UBodySetup() = default;
 
-    const FKAggregateGeom& GetAggGeom() const { return AggGeom; }
-
+    UPROPERTY(
+        EditAnywhere,
+        FKAggregateGeom, AggGeom, {};
+    )
+    
+    
     // TODO: 테스트용 하드코딩 함수. 제거할 것.
     void AddBoxElem(const FKBoxElem& BoxElem) { AggGeom.BoxElems.Add(BoxElem); }
+    void AddSphereElem(const FKSphereElem& SphereElem) { AggGeom.SphereElems.Add(SphereElem); }
 
     UPhysicalMaterial* PhysicalMaterial = nullptr;
 
-    float MassInKg = 0.0f;
+    UPROPERTY(
+    EditAnywhere, ({ .ToolTip = "DragDeltaSpeed 0.123f", .DragDeltaSpeed = 0.123f }),
+    float, MassInKg, = 0.0f;
+    )
     bool bGenerateMirroredCollision = false;
 
     float CalculateMass() const;
@@ -50,6 +58,5 @@ public:
     
     
 private:
-    FKAggregateGeom AggGeom;
     
 };

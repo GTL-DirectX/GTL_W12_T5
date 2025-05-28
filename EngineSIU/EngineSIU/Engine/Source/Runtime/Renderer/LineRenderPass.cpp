@@ -81,6 +81,7 @@ void FLineRenderPass::DrawLineBatch(const FLinePrimitiveBatchArgs& BatchArgs) co
     Graphics->DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
+
 void FLineRenderPass::PrepareRender(const std::shared_ptr<FEditorViewportClient>& Viewport)
 {
     constexpr EResourceType ResourceType = EResourceType::ERT_Scene;

@@ -4,6 +4,11 @@
 #include "Container/Set.h"
 #include "Define.h"
 
+namespace physx
+{
+class PxScene;
+}
+
 class FDXDBufferManager;
 class FGraphicsDevice;
 class FDXDShaderManager;
@@ -29,6 +34,8 @@ public:
     void PrepareLineShader() const;
     void ProcessLineRendering(const std::shared_ptr<FEditorViewportClient>& Viewport);
     void DrawLineBatch(const FLinePrimitiveBatchArgs& BatchArgs) const;
+
+
 
 protected:
     virtual void PrepareRender(const std::shared_ptr<FEditorViewportClient>& Viewport) override;

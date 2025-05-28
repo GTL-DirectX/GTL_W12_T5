@@ -428,10 +428,8 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
                 {
                 case OBJ_SPHERE:
                 {
-                    SpawnedActor = World->SpawnActor<AActor>();
+                    SpawnedActor = World->SpawnActor<ASphereActor>();
                     SpawnedActor->SetActorLabel(TEXT("OBJ_SPHERE"));
-                    USphereComp* SphereComp = SpawnedActor->AddComponent<USphereComp>();
-                    SphereComp->SetStaticMesh(FObjManager::GetStaticMesh(L"Contents/Sphere.obj"));
                     break;
                 }
                 case OBJ_CUBE:
@@ -555,10 +553,8 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
                     break;
                 case OBJ_SKELETALMESH:
                     {
-                        SpawnedActor = World->SpawnActor<AActor>();
+                        SpawnedActor = World->SpawnActor<ASkeletalMeshActor>();
                         SpawnedActor->SetActorTickInEditor(true);
-                        auto* MeshComp = SpawnedActor->AddComponent<USkeletalMeshComponent>();
-                        SpawnedActor->SetRootComponent(MeshComp);
                         SpawnedActor->SetActorLabel(TEXT("OBJ_SKELETALMESH"));
                     }
                     break;
