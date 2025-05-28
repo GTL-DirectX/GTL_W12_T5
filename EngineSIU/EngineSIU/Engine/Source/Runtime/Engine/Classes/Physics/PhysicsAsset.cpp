@@ -114,7 +114,10 @@ void UPhysicsAsset::CreatePhysicsInstance(UWorld* World, USkeletalMeshComponent*
     const uint32 ComponentId = SkeletalMeshComponent->GetUUID();
 
     const FReferenceSkeleton& RefSkeleton = SkeletalMeshComponent->GetSkeletalMeshAsset()->GetSkeleton()->GetReferenceSkeleton();
-
+    TArray<FMatrix> GlobalBoneMatrices;
+    SkeletalMeshComponent->GetCurrentGlobalBoneMatrices(GlobalBoneMatrices);
+    FMatrix ComponentWolrdMatrix =  SkeletalMeshComponent->GetWorldMatrix();
+    
     for (int i = 0; i < NumBodies; ++i)
     {
         USkeletalBodySetup* BodySetup = SkeletalBodySetups[i];
@@ -130,14 +133,18 @@ void UPhysicsAsset::CreatePhysicsInstance(UWorld* World, USkeletalMeshComponent*
             continue; // 본이 유효하지 않으면 건너뜀
         }
 
-        const FTransform LocalBoneTM = RefSkeleton.GetRawRefBonePose()[BoneIndex];
-        const FTransform WorldBoneTM = LocalBoneTM * SkeletalMeshComponent->GetComponentTransform();
+
+
+        //FTransform GlobalBoneTransform = FTransform(GlobalBoneMatrices[BoneIndex]);
+
+        const FMatrix LocalBoneTM = FMatrix(GlobalBoneMatrices[BoneIndex]);
+        const FMatrix WorldBoneTM = LocalBoneTM * ComponentWolrdMatrix;
         
         FBodyInstance* NewBody = new FBodyInstance();
         NewBody->BodySetup = BodySetup;
         NewBody->InstanceBodyIndex = i;
         NewBody->ComponentId = ComponentId; // 컴포넌트 ID 설정
-        NewBody->InitBody(World->GetPhysicsScene(), WorldBoneTM, SkeletalMeshComponent);
+        NewBody->InitBody(World->GetPhysicsScene(), FTransform(WorldBoneTM), SkeletalMeshComponent);
         OutBodies[i] = NewBody;
     }
 
@@ -172,3 +179,59 @@ void UPhysicsAsset::CreatePhysicsInstance(UWorld* World, USkeletalMeshComponent*
         OutConstraints.Add(NewConstraint);
     }
 }
+//
+//bool UPhysicsAsset::AddConstrainBetweenBones(FName FirstBoneName, FName SecondBoneName, USkeletalMesh* SkeletalMesh)
+//{
+//    if (!SkeletalMesh || !SkeletalMesh->GetSkeleton())
+//    {
+//        UE_LOG(ELogLevel::Error, TEXT("Invalid SkeletalMesh or Skeleton."));
+//        return false;
+//    }
+//
+//    const FReferenceSkeleton& RefSkeleton = SkeletalMesh->GetSkeleton()->GetReferenceSkeleton();
+//    const int32 FirstBoneIndex = RefSkeleton.FindBoneIndex(FirstBoneName);
+//    const int32 SecondBoneIndex = RefSkeleton.FindBoneIndex(SecondBoneName);
+//
+//    if (FirstBoneIndex == INDEX_NONE || SecondBoneIndex == INDEX_NONE)
+//    {
+//        UE_LOG(ELogLevel::Error, TEXT("Invalid bone names: %s or %s."), *FirstBoneName.ToString(), *SecondBoneName.ToString());
+//        return false;
+//    }
+//
+//    // 중복 체크.
+//    for (const UPhysicsConstraintTemplate* Template : ConstraintTemplates)
+//    {
+//        if (Template &&
+//            Template->DefaultInstance.ConstraintBone1 == FirstBoneName &&
+//            Template->DefaultInstance.ConstraintBone2 == SecondBoneName)
+//        {
+//            return false;
+//        }
+//    }
+//
+//    UPhysicsConstraintTemplate* NewConstraint = FObjectFactory::ConstructObject<UPhysicsConstraintTemplate>(this);
+//    if (!NewConstraint)
+//    {
+//        return false;
+//    }
+//
+//    NewConstraint->DefaultInstance.ConstraintBone1 = FirstBoneName;
+//    NewConstraint->DefaultInstance.ConstraintBone2 = SecondBoneName;
+//    NewConstraint->DefaultInstance.JointName = FName(*FString::Printf(TEXT("[%s -> %s] Constraint"), *FirstBoneName.ToString(), *SecondBoneName.ToString()));
+//
+//    const FTransform FirstBoneTM = RefSkeleton.GetRawRefBonePose()[FirstBoneIndex];
+//    const FTransform SecondBoneTM = RefSkeleton.GetRawRefBonePose()[SecondBoneIndex];
+//    const FTransform RelativeTM = FirstBoneTM.GetRelativeTransform(SecondBoneTM);
+//
+//    NewConstraint->DefaultInstance.Frame1.Position = FVector::ZeroVector; // Frame1은 항상 child 기준
+//    NewConstraint->DefaultInstance.Frame1.PriAxis = FVector::ForwardVector; // X축 (Twist)
+//    NewConstraint->DefaultInstance.Frame1.SecAxis = FVector::RightVector; // Y축 (Swing1)
+//
+//    NewConstraint->DefaultInstance.Frame2.Position = RelativeTM.GetTranslation();
+//    const FQuat RelativeRot = RelativeTM.GetRotation();
+//    NewConstraint->DefaultInstance.Frame2.PriAxis = 
+//
+//    ConstraintTemplates.Add(NewConstraint);
+//
+//    return true;
+//}

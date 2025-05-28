@@ -154,11 +154,11 @@ public:
     void ActivateRagdoll();
     void DeactivateRagdoll();
 
-private:
     void InitPhysicsBodies();
+private:
 
 private:
-    UPROPERTY(EditAnywhere, bool, bRagdollActivated, = false)
+    UPROPERTY(EditAnywhere, bool, bRagdollActivated, = true)
 
     TArray<FBodyInstance*> Bodies;
     TArray<FConstraintInstance*> Constraints;
@@ -170,6 +170,8 @@ public:
     
     UAnimInstance* AnimScriptInstance;
 
+    TArray<FMatrix> PhysicsGlobalBoneMatrix;
+    
     UAnimSingleNodeInstance* GetSingleNodeInstance() const;
 
     void SetAnimClass(UClass* NewClass);

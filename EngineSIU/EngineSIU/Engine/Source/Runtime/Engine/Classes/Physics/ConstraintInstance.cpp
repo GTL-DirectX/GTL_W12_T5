@@ -1,4 +1,4 @@
-﻿#include "ConstraintInstance.h"
+#include "ConstraintInstance.h"
 
 #include "BodyInstance.h"
 #include "PhysicsAssetUtils.h"
@@ -49,10 +49,18 @@ void FConstraintInstance::InitConstraint(FBodyInstance* Body1, FBodyInstance* Bo
         return;
     }
 
-    PxTransform LocalPose1 = ToPxTransform(Frame1.Position, Frame1.PriAxis, Frame1.SecAxis);
-    PxTransform LocalPose2 = ToPxTransform(Frame2.Position, Frame2.PriAxis, Frame2.SecAxis);
+    // 월드 기준 Transform
+    const PxTransform ParentWorldTM = Actor2->getGlobalPose(); // Parent = ConstraintBone2
+    const PxTransform ChildWorldTM = Actor1->getGlobalPose();  // Child  = ConstraintBone1
 
-    PxD6Joint* JointHandle = PxD6JointCreate(*Physics, Actor2, LocalPose2, Actor1, LocalPose1);
+    /*PxTransform LocalPose1 = ToPxTransform(Frame1.Position, Frame1.PriAxis, Frame1.SecAxis);
+    PxTransform LocalPose2 = ToPxTransform(Frame2.Position, Frame2.PriAxis, Frame2.SecAxis);*/
+
+    // 상대 Transform 계산 (Local Frame)
+    const PxTransform LocalFrameParent = ParentWorldTM.getInverse() * ChildWorldTM;
+    const PxTransform LocalFrameChild = PxTransform(PxVec3(0)); // Child 기준은 원점
+
+    PxD6Joint* JointHandle = PxD6JointCreate(*Physics, Actor2, LocalFrameParent, Actor1, LocalFrameChild);
     if (!JointHandle)
     {
         UE_LOG(ELogLevel::Error, TEXT("Failed to create D6 joint."));
@@ -61,36 +69,87 @@ void FConstraintInstance::InitConstraint(FBodyInstance* Body1, FBodyInstance* Bo
 
     JointHandle->setConstraintFlag(PxConstraintFlag::eCOLLISION_ENABLED, !bDisableCollision);
 
-    JointHandle->setMotion(PxD6Axis::eX, ToPxMotion(Swing1Motion));
-    JointHandle->setMotion(PxD6Axis::eY, ToPxMotion(Swing2Motion));
-    JointHandle->setMotion(PxD6Axis::eZ, ToPxMotion(TwistMotion));
+    JointHandle->setMotion(PxD6Axis::eX, ToPxMotion(EAngularConstraintMotion::Limited));
+    JointHandle->setMotion(PxD6Axis::eY, ToPxMotion(EAngularConstraintMotion::Limited));
+    JointHandle->setMotion(PxD6Axis::eZ, ToPxMotion(EAngularConstraintMotion::Limited));
 
-    if (Swing1Motion == EAngularConstraintMotion::Limited || Swing2Motion == EAngularConstraintMotion::Limited)
+    JointHandle->setMotion(PxD6Axis::eTWIST, ToPxMotion(EAngularConstraintMotion::Limited));
+    JointHandle->setMotion(PxD6Axis::eSWING1, ToPxMotion(EAngularConstraintMotion::Limited));
+    JointHandle->setMotion(PxD6Axis::eSWING2, ToPxMotion(EAngularConstraintMotion::Limited));
+
+    //JointHandle->setMotion(PxD6Axis::eX, ToPxMotion(XMotion));
+    //JointHandle->setMotion(PxD6Axis::eY, ToPxMotion(YMotion));
+    //JointHandle->setMotion(PxD6Axis::eZ, ToPxMotion(ZMotion));
+
+    //JointHandle->setMotion(PxD6Axis::eTWIST, ToPxMotion(TwistMotion));
+    //JointHandle->setMotion(PxD6Axis::eSWING1, ToPxMotion(Swing1Motion));
+    //JointHandle->setMotion(PxD6Axis::eSWING2, ToPxMotion(Swing2Motion));
+
+    // if (XMotion == ELinearConstraintMotion::Limited ||
+    //     YMotion == ELinearConstraintMotion::Limited ||
+    //     ZMotion == ELinearConstraintMotion::Limited)
+    // {
+    //
+    // }
+
+    PxJointLinearLimit LinearLimit(25.f, PxSpring(0,5)); 
+    JointHandle->setLinearLimit(LinearLimit);
+    if (XMotion == ELinearConstraintMotion::Limited)
+    {
+    }
+    //if (Swing1Motion == EAngularConstraintMotion::Limited || Swing2Motion == EAngularConstraintMotion::Limited)
+    //{
+    //    PxJointLimitCone SwingLimit(
+    //        FMath::DegreesToRadians(Limits.Swing1Deg),
+    //        FMath::DegreesToRadians(Limits.Swing2Deg),
+    //        0.01f);
+    //    JointHandle->setSwingLimit(SwingLimit);
+    //}
+
+    //if (TwistMotion == EAngularConstraintMotion::Limited)
+    //{
+    //    PxJointAngularLimitPair TwistLimit(
+    //        FMath::DegreesToRadians(-Limits.TwistDeg),
+    //        FMath::DegreesToRadians(+Limits.TwistDeg),
+    //        0.01f);
+    //    JointHandle->setTwistLimit(TwistLimit);
+    //}
+
+    //// 브레이크
+    //if (BreakInfo.bLinearBreakable || BreakInfo.bAngularBreakable)
+    //{
+    //    JointHandle->setBreakForce(
+    //        BreakInfo.bLinearBreakable  ? BreakInfo.LinearThreshold  : PX_MAX_F32,
+    //        BreakInfo.bAngularBreakable ? BreakInfo.AngularThreshold : PX_MAX_F32);
+    //    JointHandle->setConstraintFlag(PxConstraintFlag::eBROKEN, true);
+    //}
+
+    //if (Swing1Motion == EAngularConstraintMotion::Limited || Swing2Motion == EAngularConstraintMotion::Limited)
     {
         PxJointLimitCone SwingLimit(
-            FMath::DegreesToRadians(Limits.Swing1Deg),
-            FMath::DegreesToRadians(Limits.Swing2Deg),
+            FMath::DegreesToRadians(25),
+            FMath::DegreesToRadians(25),
             0.01f);
         JointHandle->setSwingLimit(SwingLimit);
     }
 
-    if (TwistMotion == EAngularConstraintMotion::Limited)
+    //if (TwistMotion == EAngularConstraintMotion::Limited)
     {
         PxJointAngularLimitPair TwistLimit(
-            FMath::DegreesToRadians(-Limits.TwistDeg),
-            FMath::DegreesToRadians(+Limits.TwistDeg),
+            FMath::DegreesToRadians(-25),
+            FMath::DegreesToRadians(+25),
             0.01f);
         JointHandle->setTwistLimit(TwistLimit);
     }
 
-    // 브레이크
     if (BreakInfo.bLinearBreakable || BreakInfo.bAngularBreakable)
     {
         JointHandle->setBreakForce(
-            BreakInfo.bLinearBreakable  ? BreakInfo.LinearThreshold  : PX_MAX_F32,
+            BreakInfo.bLinearBreakable ? BreakInfo.LinearThreshold : PX_MAX_F32,
             BreakInfo.bAngularBreakable ? BreakInfo.AngularThreshold : PX_MAX_F32);
         JointHandle->setConstraintFlag(PxConstraintFlag::eBROKEN, true);
     }
+
 }
 
 void FConstraintInstance::TermConstraint()

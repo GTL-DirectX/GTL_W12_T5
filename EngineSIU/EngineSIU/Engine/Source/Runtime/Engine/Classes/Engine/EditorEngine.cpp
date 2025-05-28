@@ -54,7 +54,7 @@ void UEditorEngine::Init()
         AssetManager->InitAssetManager();
     }
     // TODO: 필요할 때 활성화 하기
-    // LoadLevel("Saved/AutoSaves.scene");
+     LoadLevel("Saved/AutoSaves.scene");
 }
 
 void UEditorEngine::Release()
@@ -133,6 +133,26 @@ void UEditorEngine::Tick(float DeltaTime)
             }
         }
         else if (WorldContext->WorldType == EWorldType::ParticleViewer)
+        {
+            if (UWorld* World = WorldContext->World())
+            {
+                World->Tick(DeltaTime);
+                EditorPlayer->Tick(DeltaTime);
+                ULevel* Level = World->GetActiveLevel();
+                TArray CachedActors = Level->Actors;
+                if (Level)
+                {
+                    for (AActor* Actor : CachedActors)
+                    {
+                        if (Actor && Actor->IsActorTickInEditor())
+                        {
+                            Actor->Tick(DeltaTime);
+                        }
+                    }
+                }
+            }
+        }
+        else if (WorldContext->WorldType == EWorldType::PhysicsViewer)
         {
             if (UWorld* World = WorldContext->World())
             {
@@ -297,7 +317,7 @@ void UEditorEngine::StartPhysicsViewer(FName SkeletalMeshName)
     ActiveWorld = PhysicsViewerWorld;
     PhysicsViewerWorld->WorldType = EWorldType::PhysicsViewer;
 
-    ASkeletalMeshActor* SkeletalActor = PhysicsViewerWorld->SpawnActor<ASkeletalMeshActor>();
+    AActor* SkeletalActor = PhysicsViewerWorld->SpawnActor<AActor>();
     SkeletalActor->SetActorTickInEditor(true);
     
     USkeletalMeshComponent* MeshComp = SkeletalActor->AddComponent<USkeletalMeshComponent>();

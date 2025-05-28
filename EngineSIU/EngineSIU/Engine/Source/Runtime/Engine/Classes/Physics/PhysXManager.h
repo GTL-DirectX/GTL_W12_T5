@@ -27,6 +27,7 @@ public:
     
     PxScene* CreateScene();
     void DestroyScene(PxScene* Scene);
+    void ClearPxScene(physx::PxScene* Scene);
     
 private:
     PxFoundation* Foundation = nullptr;

@@ -9,7 +9,9 @@
 #include "Physics/ConstraintInstance.h"
 #include "Physics/PhysicsAsset.h"
 #include "Physics/PhysicsConstraintTemplate.h"
+#include "Physics/PhysXManager.h"
 #include "UnrealEd/ImGuiWidget.h"
+#include "World/SimulationViewerWorld.h"
 
 PhysicsAssetEditorPanel::PhysicsAssetEditorPanel()
 {
@@ -36,6 +38,18 @@ void PhysicsAssetEditorPanel::Render()
     {
         SetSkeletalMesh(SkeletalMeshComponent->GetSkeletalMeshAsset());
     }
+    
+    // TODO 월드 틱으로 옮겨야 할 듯
+    if (Engine->ActiveWorld->WorldType == EWorldType::PhysicsViewer and CurrentPhysicsAsset != nullptr)
+    {
+        physx::PxScene* ViewerPxScene = Engine->ActiveWorld->GetPhysicsScene(); // 이 월드의 PxScene 가져오기
+        // 1. 기존 PhysicsViewer PxScene의 모든 액터 제거
+        FPhysXManager::Get().ClearPxScene(ViewerPxScene); // 위에서 정의한 함수 사용
+
+        if (SkeletalMeshComponent)
+            SkeletalMeshComponent->InitPhysicsBodies();
+    }
+
     
     // if (!Engine || !CurrentPhysicsAsset)
     // {
@@ -149,6 +163,31 @@ void PhysicsAssetEditorPanel::Render()
         Engine->EndPhysicsViewer(); // 이런 함수가 있다고 가정
     }
     ImGui::End();
+
+    
+
+    if (SelectedBoneName != NAME_None)
+    {
+        //// SelectBoneIndex 처리
+        const FReferenceSkeleton& RefSkeleton = CurrentSkeletalMesh->GetSkeleton()->GetReferenceSkeleton();
+
+        for (int32 i = 0; i < RefSkeleton.GetRawBoneNum(); ++i)
+        {
+            if (RefSkeleton.RawRefBoneInfo[i].Name == SelectedBoneName) // 루트 본인 경우
+            {
+                if (UPhysicsViewerWorld* PhysicsViewerWorld = Cast<UPhysicsViewerWorld>(Engine->ActiveWorld))
+                {
+                    PhysicsViewerWorld->SelectBoneIndex = i; // PhysicsViewerWorld에 선택된 본 인덱스 설정
+                }
+                else if (USimulationViewerWorld* SimulationViewerWorld = Cast<USimulationViewerWorld>(Engine->ActiveWorld))
+                {
+                    SimulationViewerWorld->SelectBoneIndex = i; // SkeletalViewerWorld에 선택된 본 인덱스 설정
+                }
+                break; // 찾았으면 루프 종료
+            }
+        }
+    }
+
 }
 
 void PhysicsAssetEditorPanel::SetSkeletalMesh(USkeletalMesh* InSkeletalMesh)
@@ -207,7 +246,7 @@ void PhysicsAssetEditorPanel::RenderDetailsPanel()
         RenderObjectDetails(SelectedBodySetup); // UBodySetup (및 USkeletalBodySetup)의 프로퍼티 표시
         RenderConstraintCreationUI(SelectedBodySetup->BoneName, TEXT("FromSelectedBodySetup")); // UiContextId 전달
 
-        if (ImGui::Button(*FString::Printf(TEXT("Delete BodySetup: %s"), *SelectedBodySetup->BoneName.ToString())))
+        if (SelectedBodySetup && ImGui::Button(*FString::Printf(TEXT("Delete BodySetup: %s"), *SelectedBodySetup->BoneName.ToString())))
         {
             HandleDeleteSelectedBodySetup(); // 삭제 핸들러 호출
             return; // 중요: 삭제 후에는 이 프레임에서 더 이상 이 객체에 접근하지 않도록 함

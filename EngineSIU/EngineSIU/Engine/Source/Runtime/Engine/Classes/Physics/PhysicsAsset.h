@@ -47,4 +47,6 @@ public:
 
     void CreatePhysicsInstance(class UWorld* World, class USkeletalMeshComponent* SkeletalMeshComponent, TArray<FBodyInstance*>& OutBodies, TArray<FConstraintInstance*>& OutConstraints);
 
+    //bool AddConstrainBetweenBones(FName FirstBoneName, FName SecondBoneName, USkeletalMesh* SkeletalMesh);
+
 };

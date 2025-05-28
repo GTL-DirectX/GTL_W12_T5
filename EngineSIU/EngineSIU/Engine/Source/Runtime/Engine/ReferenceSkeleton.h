@@ -130,4 +130,20 @@ public:
            << InverseBindPoseMatrices
            << RawNameToIndexMap;
     }
+
+    FTransform GetGlobalRefPose(int32 BoneIndex) const
+    {
+        if (RawRefBonePose.IsValidIndex(BoneIndex))
+        {
+            FTransform GlobalTransform = RawRefBonePose[BoneIndex];
+            int32 ParentIndex = GetParentIndex(BoneIndex);
+            while (ParentIndex != INDEX_NONE)
+            {
+                GlobalTransform = GlobalTransform * RawRefBonePose[ParentIndex];
+                ParentIndex = GetParentIndex(ParentIndex);
+            }
+            return GlobalTransform;
+        }
+        return FTransform::Identity;
+    }
 };

@@ -88,7 +88,8 @@ void ATransformGizmo::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
 
     // Editor 모드에서만 Tick. SkeletalMeshViewer모드에서도 tick
-    if (GEngine->ActiveWorld->WorldType != EWorldType::Editor and GEngine->ActiveWorld->WorldType != EWorldType::SkeletalViewer)
+    if (GEngine->ActiveWorld->WorldType != EWorldType::Editor and GEngine->ActiveWorld->WorldType != EWorldType::SkeletalViewer
+        and GEngine->ActiveWorld->WorldType != EWorldType::PhysicsViewer)
     {
         return;
     }
@@ -148,6 +149,28 @@ void ATransformGizmo::Tick(float DeltaTime)
                     AddActorRotation(GlobalBoneTransform.Rotation);
                 }
             
+            }
+        }
+        
+        if (GEngine->ActiveWorld->WorldType == EWorldType::PhysicsViewer)
+        {
+            if (UPhysicsViewerWorld* PhysicsViewerWorld = Cast<UPhysicsViewerWorld>(Engine->ActiveWorld))
+            {
+                USkeletalMeshComponent* SkeletalMeshComp = Cast<USkeletalMeshComponent>(TargetComponent);
+                if (SkeletalMeshComp)
+                {
+                    int BoneIndex = PhysicsViewerWorld->SelectBoneIndex;
+                    TArray<FMatrix> GlobalBoneMatrices;
+                    SkeletalMeshComp->GetCurrentGlobalBoneMatrices(GlobalBoneMatrices);
+
+                    FTransform GlobalBoneTransform = FTransform(GlobalBoneMatrices[BoneIndex]);
+
+                    AddActorLocation(GlobalBoneTransform.Translation);
+                    if (EditorPlayer->GetCoordMode() == ECoordMode::CDM_LOCAL || EditorPlayer->GetControlMode() == EControlMode::CM_SCALE)
+                    {
+                        AddActorRotation(GlobalBoneTransform.Rotation);
+                    }
+                }
             }
         }
     }
