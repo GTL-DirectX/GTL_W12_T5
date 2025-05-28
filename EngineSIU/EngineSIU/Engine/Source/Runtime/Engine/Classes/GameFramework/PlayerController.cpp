@@ -71,25 +71,26 @@ void APlayerController::SetViewTarget(class AActor* NewViewTarget, struct FViewT
     }
 }
 
-void APlayerController::Possess(AActor* InActor)
+void APlayerController::Possess(APlayer* InPlayer)
 {
-    PossessedActor = InActor;
+    PossessedPlayer = InPlayer;
     bHasPossessed = true;
 
     if (InputComponent)
     {
         InputComponent->SetPossess();
     }
+    InPlayer->SetUpPlayerInputComponent(InputComponent);
 }
 
 void APlayerController::UnPossess()
 {
-    if (!bHasPossessed && PossessedActor == nullptr)
+    if (!bHasPossessed && PossessedPlayer == nullptr)
     {
         return;
     }
     
-    PossessedActor = nullptr;
+    PossessedPlayer = nullptr;
     bHasPossessed = false;
 
     if (InputComponent)
