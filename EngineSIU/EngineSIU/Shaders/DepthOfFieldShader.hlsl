@@ -201,3 +201,28 @@ float4 PS_Composite(PS_INPUT IN) : SV_Target
 
     return float4(result, 1);
 }
+
+float4 PS_DebugCoC(PS_INPUT IN) : SV_Target
+{
+    // CoC 텍스처에서 사인값 읽기
+    float signedCoC = CoCTexture.Sample(LinearSampler, IN.UV).r;
+    
+    // InFocusThreshold는 b0 상수버퍼에 이미 정의되어 있습니다.
+    float thresh = InFocusThreshold;
+    
+    // |CoC| < thresh 면 초점(흰색)
+    if (abs(signedCoC) < 0.2)
+    {
+        return float4(1, 1, 1, 1);
+    }
+    // 음수면 전경 (녹색)
+    else if (signedCoC < 0.0f)
+    {
+        return float4(0, 1, 0, 1);
+    }
+    // 양수면 배경 (파란색)
+    else
+    {
+        return float4(0, 0, 1, 1);
+    }
+}
