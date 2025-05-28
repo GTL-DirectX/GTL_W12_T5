@@ -55,6 +55,7 @@ UObject* USkeletalMeshComponent::Duplicate(UObject* InOuter)
     }
     NewComponent->SetLooping(this->IsLooping());
     NewComponent->SetPlaying(this->IsPlaying());
+    NewComponent->bRagdollActivated = bRagdollActivated;
     return NewComponent;
 }
 
@@ -175,6 +176,11 @@ void USkeletalMeshComponent::SetSkeletalMeshAsset(USkeletalMesh* InSkeletalMeshA
     CPURenderData->Indices = InSkeletalMeshAsset->GetRenderData()->Indices;
     CPURenderData->ObjectName = InSkeletalMeshAsset->GetRenderData()->ObjectName;
     CPURenderData->MaterialSubsets = InSkeletalMeshAsset->GetRenderData()->MaterialSubsets;
+
+    if (!SkeletalMeshAsset->PhysicsAsset)
+    {
+        SkeletalMeshAsset->CreateOrBindPhysicsAsset();
+    }
 }
 
 FTransform USkeletalMeshComponent::GetSocketTransform(FName SocketName) const
@@ -479,10 +485,7 @@ void USkeletalMeshComponent::UpdateFromPhysics(float DeltaTime)
         FTransform LocalTM = WorldTM.GetRelativeTransform(GetComponentTransform());
 
         // 해당 BoneIndex에 직접 반영
-        if (RefBonePoseTransforms.IsValidIndex(BoneIndex))
-        {
-            RefBonePoseTransforms[BoneIndex] = LocalTM;
-        }
+        BonePoseContext.Pose[BoneIndex] = LocalTM;
     }
 }
 

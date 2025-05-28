@@ -134,7 +134,7 @@ public:
 public:
     virtual void UpdateFromPhysics(float DeltaTime);
 
-    UPROPERTY(EditAnywhere, EPhysicsBodyType, PhysicsBodyType, = EPhysicsBodyType::Static) // Default to static body
+    UPROPERTY(EditAnywhere, EPhysicsBodyType, PhysicsBodyType, = EPhysicsBodyType::Dynamic) // Default to static body
     
 };
 

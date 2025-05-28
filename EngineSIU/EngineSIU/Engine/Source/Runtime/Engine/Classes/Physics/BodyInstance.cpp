@@ -6,12 +6,9 @@
 #include "Components/PrimitiveComponent.h"
 #include "PhysicalMaterial.h"
 
-void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
+void FBodyInstance::InitBody(PxScene* Scene, const FTransform& InitWorldTransform, class UPrimitiveComponent* Owner)
 {
-    if (bInitialized)
-        return;
-
-    if (!BodySetup || !Scene)
+    if (bInitialized || !BodySetup || !Scene)
         return;
 
     PxPhysics* Physics = FPhysXManager::Get().GetPhysics();
@@ -27,8 +24,7 @@ void FBodyInstance::InitBody(PxScene* Scene, class UPrimitiveComponent* Owner)
         return; // No shapes to create
     }
 
-    const FTransform WorldTM = Owner->GetComponentTransform();
-    const PxTransform PxTM = ToPxTransform(WorldTM);
+    const PxTransform PxTM = ToPxTransform(InitWorldTransform);
 
     if (Owner->PhysicsBodyType == EPhysicsBodyType::Static)
     {

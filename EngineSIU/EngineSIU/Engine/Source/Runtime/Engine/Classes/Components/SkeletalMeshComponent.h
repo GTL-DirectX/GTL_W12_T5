@@ -127,6 +127,9 @@ protected:
 
     EAnimationMode AnimationMode;
     
+public:
+    const FPoseContext& GetPoseContext() const { return BonePoseContext; }
+
 private:
     FPoseContext BonePoseContext;
     

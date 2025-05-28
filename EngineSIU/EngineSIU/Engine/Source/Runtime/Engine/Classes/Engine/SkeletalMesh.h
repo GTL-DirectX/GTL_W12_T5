@@ -12,6 +12,8 @@ public:
     USkeletalMesh() = default;
     virtual ~USkeletalMesh() override = default;
 
+    virtual UObject* Duplicate(UObject* InOuter) override;
+
     void SetRenderData(std::unique_ptr<FSkeletalMeshRenderData> InRenderData);
 
     const FSkeletalMeshRenderData* GetRenderData() const;
