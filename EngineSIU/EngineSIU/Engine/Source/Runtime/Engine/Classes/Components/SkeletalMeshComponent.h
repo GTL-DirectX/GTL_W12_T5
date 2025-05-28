@@ -121,8 +121,6 @@ public:
 
     virtual void InitAnim();
 
-    TArray<FBodyInstance*> GetBodies() const { return Bodies; }
-    TArray<FConstraintInstance*> GetConstraints() const { return Constraints; }
     
 protected:
     bool NeedToSpawnAnimScriptInstance() const;
@@ -143,10 +141,22 @@ private:
     void CPUSkinning(bool bForceUpdate = false);
 
     // Physics 관련.
+
+public:
+    virtual void UpdateFromPhysics(float DeltaTime) override;
+
+    TArray<FBodyInstance*> GetBodies() const { return Bodies; }
+    TArray<FConstraintInstance*> GetConstraints() const { return Constraints; }
+
+    void ActivateRagdoll();
+    void DeactivateRagdoll();
+
 private:
     void InitPhysicsBodies();
 
 private:
+    UPROPERTY(EditAnywhere, bool, bRagdollActivated, = false)
+
     TArray<FBodyInstance*> Bodies;
     TArray<FConstraintInstance*> Constraints;
 
