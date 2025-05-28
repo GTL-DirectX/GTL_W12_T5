@@ -32,7 +32,7 @@ void PhysicsAssetEditorPanel::Render()
 
     USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(Engine->GetSelectedComponent());
 
-    if (SkeletalMeshComponent)
+    if (SkeletalMeshComponent and SkeletalMeshComponent->GetSkeletalMeshAsset() != CurrentSkeletalMesh)
     {
         SetSkeletalMesh(SkeletalMeshComponent->GetSkeletalMeshAsset());
     }
@@ -200,6 +200,8 @@ void PhysicsAssetEditorPanel::RenderDetailsPanel()
     {
         ImGui::SeparatorText(*FString::Printf(TEXT("Body Setup: %s"), *SelectedBodySetup->BoneName.ToString()));
         RenderObjectDetails(SelectedBodySetup); // UBodySetup (및 USkeletalBodySetup)의 프로퍼티 표시
+
+        RenderConstraintCreationUI(SelectedBodySetup->BoneName, TEXT("FromSelectedBodySetup")); // UiContextId 전달
     }
     else if (SelectedConstraintTemplate)
     {
@@ -281,6 +283,8 @@ void PhysicsAssetEditorPanel::RenderDetailsPanel()
                 }
             }
         }
+
+        
         
     }
     else if (CurrentPhysicsAsset && !SelectedBodySetup && !SelectedConstraintTemplate && SelectedBoneName == NAME_None)
@@ -510,5 +514,99 @@ void PhysicsAssetEditorPanel::LoadIcons()
     BodyIconSRV = FEngineLoop::ResourceManager.GetTexture(L"Assets/Viewer/RigidBody_16x.PNG")->TextureSRV;
     ConstraintIconSRV = FEngineLoop::ResourceManager.GetTexture(L"Assets/Viewer/Constraint.PNG")->TextureSRV;
 
+}
+
+
+ void PhysicsAssetEditorPanel::RenderConstraintCreationUI(FName FirstBoneName, const FString& UiContextId)
+{
+    if (FirstBoneName == NAME_None || !CurrentPhysicsAsset)
+    {
+        return;
+    }
+
+    ImGui::SeparatorText(*FString::Printf(TEXT("Create Constraint from %s to..."), *FirstBoneName.ToString()));
+
+    // 각 UI 컨텍스트마다 고유한 static 변수를 사용하기 위해 ID를 활용하거나,
+    // 멤버 변수로 SecondBoneToConstrain을 컨텍스트별로 관리해야 할 수 있습니다.
+    // 여기서는 간단하게 UiContextId를 사용하여 ImGui ID를 다르게 합니다.
+    // 더 나은 방법은 멤버 변수로 각 컨텍스트의 선택 상태를 저장하는 것입니다.
+    // 예: static TMap<FString, FName> ContextualSecondBoneSelection;
+    // 여기서는 설명을 위해 간단한 static 변수를 사용하되, ID로 구분합니다.
+
+    ImGui::PushID(*UiContextId); // ID 푸시
+
+    static FName SecondBoneToConstrain = NAME_None;
+    FString ComboLabel = FString::Printf(TEXT("Connect to Body##%s"), *UiContextId); // 고유 레이블
+    FString SecondBoneComboPreview = SecondBoneToConstrain == NAME_None ? TEXT("Select Second Body...") : SecondBoneToConstrain.ToString();
+
+    if (ImGui::BeginCombo(*ComboLabel, *SecondBoneComboPreview))
+    {
+        for (USkeletalBodySetup* OtherBodySetup : CurrentPhysicsAsset->SkeletalBodySetups)
+        {
+            // 첫 번째 본과 다른 BodySetup만 선택 가능하도록
+            if (OtherBodySetup && OtherBodySetup->BoneName != FirstBoneName)
+            {
+                if (ImGui::Selectable(*OtherBodySetup->BoneName.ToString(), SecondBoneToConstrain == OtherBodySetup->BoneName))
+                {
+                    SecondBoneToConstrain = OtherBodySetup->BoneName;
+                }
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+    if (SecondBoneToConstrain != NAME_None)
+    {
+        FString ButtonLabel = FString::Printf(TEXT("Create Constraint (%s - %s)##%s"), *FirstBoneName.ToString(), *SecondBoneToConstrain.ToString(), *UiContextId);
+        if (ImGui::Button(*ButtonLabel))
+        {
+            // 이미 두 본 사이에 제약 조건이 있는지 확인
+            bool bConstraintExists = false;
+            for (UPhysicsConstraintTemplate* ExistingConstraint : CurrentPhysicsAsset->ConstraintTemplates)
+            {
+                if (ExistingConstraint)
+                {
+                    const FConstraintInstance& CI = ExistingConstraint->DefaultInstance;
+                    if ((CI.ConstraintBone1 == FirstBoneName && CI.ConstraintBone2 == SecondBoneToConstrain) ||
+                        (CI.ConstraintBone1 == SecondBoneToConstrain && CI.ConstraintBone2 == FirstBoneName))
+                    {
+                        bConstraintExists = true;
+                        UE_LOG(ELogLevel::Warning, TEXT("Constraint already exists between %s and %s."), *FirstBoneName.ToString(), *SecondBoneToConstrain.ToString());
+                        break;
+                    }
+                }
+            }
+
+            if (!bConstraintExists)
+            {
+                UPhysicsConstraintTemplate* NewConstraint = FObjectFactory::ConstructObject<UPhysicsConstraintTemplate>(CurrentPhysicsAsset);
+                if (NewConstraint)
+                {
+                    NewConstraint->DefaultInstance.ConstraintBone1 = FirstBoneName;
+                    NewConstraint->DefaultInstance.ConstraintBone2 = SecondBoneToConstrain;
+                    NewConstraint->DefaultInstance.JointName = FName(*FString::Printf(TEXT("[%s -> %s] Constraint"), *FirstBoneName.ToString(), *SecondBoneToConstrain.ToString()));
+
+                    CurrentPhysicsAsset->ConstraintTemplates.Add(NewConstraint);
+
+                    SelectedConstraintTemplate = NewConstraint;
+                    SelectedBodySetup = nullptr;
+                    SelectedBoneName = NAME_None;
+                    SecondBoneToConstrain = NAME_None; // 중요: 여기서 초기화하면 다음 프레임에 콤보박스가 초기화됨.
+                                                       // UI 상태 유지를 위해 호출부에서 적절히 관리하거나,
+                                                       // 성공적으로 생성 후 명시적으로 초기화 필요.
+
+                    UE_LOG(ELogLevel::Display, TEXT("Created Constraint between %s and %s."), *NewConstraint->DefaultInstance.ConstraintBone1.ToString(), *NewConstraint->DefaultInstance.ConstraintBone2.ToString());
+                }
+                else
+                {
+                    UE_LOG(ELogLevel::Error, TEXT("Failed to construct UPhysicsConstraintTemplate."));
+                }
+            }
+            // 제약 조건 생성 시도 후에는 SecondBoneToConstrain 선택을 초기화하여
+            // 다음 번 UI 표시 시 "Select Second Body..."로 나타나도록 합니다.
+            SecondBoneToConstrain = NAME_None;
+        }
+    }
+    ImGui::PopID(); // ID 팝
 }
 

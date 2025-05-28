@@ -79,7 +79,7 @@ void UPhysicsAsset::SerializeAsset(FArchive& Ar)
                 FName ConstraintName = ConstraintTemplates[i] ? ConstraintTemplates[i]->GetFName() : NAME_None;
                 Ar << ConstraintName;
     
-                if (ConstraintName != NAME_None)
+                if (ConstraintName == NAME_None)
                 {
                     assert(false);
                 }

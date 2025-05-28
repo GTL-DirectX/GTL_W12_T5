@@ -333,8 +333,8 @@ void UAssetManager::SavePhysicsAssets(UPhysicsAsset* PhysicsAsset, const FString
 
 void UAssetManager::LoadPhysicsAsset(const FAssetInfo& AssetInfo)
 {
-    // TODO : ControlEditorPanel Viwer Open과 코드 중복 다수
-    // 경로, 이름 준비
+    
+    
     FString BaseName;
 
     FWString FilePath = AssetInfo.SourceFilePath.ToWideString();
@@ -456,10 +456,8 @@ void UAssetManager::AddToAssetMap(const FAssetLoadResult& Result, const FString&
     for (int32 i = 0 ; i < Result.PhysicsAssets.Num(); ++i)
     {
         UPhysicsAsset* PhysicsAsset = Result.PhysicsAssets[i];
-        FString BaseAssetName = PhysicsAsset->GetName();
 
         FAssetInfo Info = BaseAssetInfo;
-        Info.AssetName = FName(BaseAssetName);
         Info.AssetType = EAssetType::PhysicsAsset;
         
         FString Key = Info.GetFullPath();
@@ -967,7 +965,8 @@ bool UAssetManager::SerializeAssetLoadResult(FArchive& Ar, FAssetLoadResult& Res
         UPhysicsAsset* PhysicsAsset = nullptr;
         if (Ar.IsLoading())
         {
-            PhysicsAsset = FObjectFactory::ConstructObject<UPhysicsAsset>(nullptr, Info.AssetName);
+            
+            PhysicsAsset = FObjectFactory::ConstructObject<UPhysicsAsset>(nullptr, Info.PackagePath.ToString() + "/" + Info.AssetName.ToString());
             Result.PhysicsAssets.Add(PhysicsAsset);
         }
         else
