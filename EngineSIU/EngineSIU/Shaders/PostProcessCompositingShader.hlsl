@@ -1,4 +1,5 @@
 Texture2D FogTexture : register(t103);
+Texture2D DoFTexture : register(t106); // Depth of Field Texture
 // PostProcessing 추가 시 Texture 추가 (EShaderSRVSlot)
 
 SamplerState CompositingSampler : register(s0);

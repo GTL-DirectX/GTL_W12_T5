@@ -19,7 +19,7 @@
 #include "UnrealEd/UnrealEd.h"
 #include "World/ParticleViewerWorld.h"
 #include "World/SimulationViewerWorld.h"
-
+#include "Actors/DefaultPlayer.h"
 extern FEngineLoop GEngineLoop;
 
 namespace PrivateEditorSelection
@@ -456,7 +456,7 @@ void UEditorEngine::BindEssentialObjects()
     //실수로 안만들면 넣어주기
     if (ActiveWorld->GetMainPlayer() == nullptr)
     {
-        APlayer* TempPlayer = ActiveWorld->SpawnActor<APlayer>();
+        ADefaultPlayer* TempPlayer = ActiveWorld->SpawnActor<ADefaultPlayer>();
         TempPlayer->SetActorLabel(TEXT("OBJ_PLAYER"));
         TempPlayer->SetActorTickInEditor(false);
         ActiveWorld->SetMainPlayer(TempPlayer);

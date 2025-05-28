@@ -19,6 +19,7 @@
 #include "DepthPrePass.h"
 #include "TileLightCullingPass.h"
 #include "TranslucentRenderPass.h"
+#include "DepthOfFieldPass.h"
 
 #include "CompositingPass.h"
 #include "ParticleHelper.h"
@@ -73,7 +74,7 @@ void FRenderer::Initialize(FGraphicsDevice* InGraphics, FDXDBufferManager* InBuf
     CompositingPass = AddRenderPass<FCompositingPass>();
     PostProcessCompositingPass = AddRenderPass<FPostProcessCompositingPass>();
     SlateRenderPass = AddRenderPass<FSlateRenderPass>();
-
+    DepthOfFieldPass = AddRenderPass<FDepthOfFieldPass>();
     assert(ShadowManager->Initialize(Graphics, BufferManager) && "ShadowManager Initialize Failed");
 
     for (IRenderPass* RenderPass : RenderPasses)
@@ -146,6 +147,9 @@ void FRenderer::CreateConstantBuffers()
 
     UINT CPUSkinningBufferSize = sizeof(FCPUSkinningConstants);
     BufferManager->CreateBufferGeneric<FCPUSkinningConstants>("FCPUSkinningConstants", nullptr, CPUSkinningBufferSize, D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+
+    UINT CameraDoFBufferSize = sizeof(FCameraDoFConstants);
+    BufferManager->CreateBufferGeneric<FCameraDoFConstants>("FCameraDoFConstants", nullptr, CameraDoFBufferSize, D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 
     BufferManager->CreateStructuredBufferGeneric<FMatrix>("BoneBuffer", nullptr, MaxBoneNum, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 
@@ -480,6 +484,12 @@ void FRenderer::RenderPostProcess(const std::shared_ptr<FEditorViewportClient>& 
             FogRenderPass->Render(Viewport);
         }
 
+        if (ShowFlag & EEngineShowFlags::SF_DepthOfField)
+        {
+            QUICK_SCOPE_CYCLE_COUNTER(DepthOfFieldPass_CPU)
+            QUICK_GPU_SCOPE_CYCLE_COUNTER(DepthOfFieldPass_GPU, *GPUTimingManager)
+            DepthOfFieldPass->Render(Viewport);
+        }
         // TODO: 포스트 프로세스 별로 각자의 렌더 타겟 뷰에 렌더하기
 
         /**

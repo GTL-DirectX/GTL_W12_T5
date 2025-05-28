@@ -44,6 +44,7 @@
 #include "Contents/Actors/SkeletalMeshActorTest.h"
 #include "Contents/Actors/TriggerBox.h"
 #include "Renderer/CompositingPass.h"
+#include "Actors/Vehicle.h"
 #include <Engine/FbxLoader.h>
 
 #include "Components/PostProcessVolume.h"
@@ -313,6 +314,56 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
 
         ImGui::Separator();
 
+        ImGui::Text("Focal Length");
+        float FocalLength= GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocalLength_mm;
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::DragFloat("##FocalLength", &FocalLength, 1.f, 4.f, 1000.0f, "%.1f"))
+        {
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocalLength_mm = FocalLength;
+        }
+
+        ImGui::Spacing();
+
+        ImGui::Text("F_Stop");
+        float F_Stop = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->F_Stop;
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::DragFloat("##F_Stop", &F_Stop, 0.1f, 1.0f, 22.0f, "%.1f"))
+        {
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->F_Stop = F_Stop;
+        }
+
+        ImGui::Spacing();
+
+        ImGui::Text("Focus Distance");
+        float FocusDistance = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocusDistance;
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::DragFloat("##FocusDistance", &FocusDistance, 1.0f, 1.0f, 10000.0f, "%.1f"))
+        {
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->FocusDistance = FocusDistance;
+        }
+
+        ImGui::Spacing();
+
+        ImGui::Text("SensorWidth");
+        float SensorWidth_mm = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->SensorWidth_mm;
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::DragFloat("##SensorWidth", &SensorWidth_mm, 1.0f, 1.0f, 100.0f, "%.1f"))
+        {
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->SensorWidth_mm = SensorWidth_mm;
+        }
+
+        ImGui::Spacing();
+
+        ImGui::Text("CoCScaleFactor");
+        float CoCScaleFactor = GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->CoCScaleFactor;
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::DragFloat("##CoCScaleFactor", &CoCScaleFactor, 1.0f, 1.0f, 100.0f, "%.1f"))
+        {
+            GEngineLoop.GetLevelEditor()->GetActiveViewportClient()->CoCScaleFactor = CoCScaleFactor;
+        }
+
+        ImGui::Separator();
+
         ImGui::Text("Gamma");
         float Gamma = FEngineLoop::Renderer.CompositingPass->GammaValue;
         ImGui::SetNextItemWidth(120.0f);
@@ -366,6 +417,7 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
             {.Label = "SkeletalMeshActor", .OBJ = OBJ_SKELETALMESH},
             {.Label = "SequencerPlayer", .OBJ = OBJ_SEQUENCERPLAYER},
             {.Label = "PostProcessVolume", .OBJ = OBJ_POSTPROCESSVOLUME},
+            {.Label = "Vehicle", .OBJ = OBJ_VEHICLE},
         };
 
         for (const auto& primitive : primitives)
@@ -519,6 +571,12 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
                     auto* MeshComp2 = SpawnedActor->AddComponent<UPostProcessVolume>();
                     SpawnedActor->SetRootComponent(MeshComp2);
                     SpawnedActor->SetActorLabel(TEXT("OBJ_POSTPROCESSVOLUME"));
+                }
+                case OBJ_VEHICLE:
+                {
+                    SpawnedActor = World->SpawnActor<AVehicle>();
+                    SpawnedActor->SetActorLabel(TEXT("OBJ_VEHICLE"));
+                    break;
                 }
                 case OBJ_CAMERA:
                 case OBJ_PLAYER:
