@@ -119,7 +119,8 @@ static PxFilterFlags NoCollisionSelfFilterShader(PxFilterObjectAttributes attrib
 PxScene* FPhysXManager::CreateScene()
 {
     PxSceneDesc SceneDesc(Physics->getTolerancesScale());
-    SceneDesc.gravity = PxVec3(0.0f, 0.0f, -9.81f);
+    // 축 맞춰주기 위함.
+    SceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
 
     SceneDesc.cpuDispatcher = CpuDispatcher;
     SceneDesc.filterShader = NoCollisionSelfFilterShader;
