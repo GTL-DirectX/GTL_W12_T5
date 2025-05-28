@@ -28,6 +28,9 @@ void ADefaultPlayer::SetUpPlayerInputComponent(UInputComponent* InInputComponent
     InInputComponent->BindAction("D", [this](float DeltaTime) { MoveRight(DeltaTime); });
     InInputComponent->BindAction("Q", [this](float DeltaTime) { MoveUp(DeltaTime); });
     InInputComponent->BindAction("E", [this](float DeltaTime) { MoveUp(-DeltaTime); });
+
+    InInputComponent->BindAxis("Turn", [this](float DeltaTime) { RotateYaw(DeltaTime); });
+    InInputComponent->BindAxis("LookUp", [this](float DeltaTime) { RotatePitch(DeltaTime); });    
 }
 
 void ADefaultPlayer::MoveForward(float DeltaTime)
@@ -47,3 +50,18 @@ void ADefaultPlayer::MoveUp(float DeltaTime)
     FVector Delta = GetActorUpVector() * MoveSpeed * DeltaTime;
     SetActorLocation(GetActorLocation() + Delta);
 }
+
+void ADefaultPlayer::RotateYaw(float DeltaTime)
+{
+    FRotator NewRotation = GetActorRotation();
+    NewRotation.Yaw += DeltaTime * RotationSpeed; // Yaw 회전 속도
+    SetActorRotation(NewRotation);
+}
+
+void ADefaultPlayer::RotatePitch(float DeltaTime)
+{
+    FRotator NewRotation = GetActorRotation();
+    NewRotation.Pitch = FMath::Clamp(NewRotation.Pitch - DeltaTime*RotationSpeed, -89.0f, 89.0f);
+    SetActorRotation(NewRotation);
+}
+
