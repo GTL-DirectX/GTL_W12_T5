@@ -5,6 +5,8 @@
 #include "BodyInstance.h"
 #include "World/World.h"
 
+#include "Engine/SkeletalMesh.h"
+
 UPhysicsAsset::UPhysicsAsset()
 {
 }
@@ -111,6 +113,8 @@ void UPhysicsAsset::CreatePhysicsInstance(UWorld* World, USkeletalMeshComponent*
     // 컴포넌트 끼리의 충돌을 방지하기 위해 UUID를 사용.
     const uint32 ComponentId = SkeletalMeshComponent->GetUUID();
 
+    const FReferenceSkeleton& RefSkeleton = SkeletalMeshComponent->GetSkeletalMeshAsset()->GetSkeleton()->GetReferenceSkeleton();
+
     for (int i = 0; i < NumBodies; ++i)
     {
         USkeletalBodySetup* BodySetup = SkeletalBodySetups[i];
@@ -119,11 +123,21 @@ void UPhysicsAsset::CreatePhysicsInstance(UWorld* World, USkeletalMeshComponent*
             continue;
         }
 
+        const FName BoneName = BodySetup->BoneName;
+        const int32 BoneIndex = RefSkeleton.FindBoneIndex(BoneName);
+        if (BoneIndex == INDEX_NONE)
+        {
+            continue; // 본이 유효하지 않으면 건너뜀
+        }
+
+        const FTransform LocalBoneTM = RefSkeleton.GetRawRefBonePose()[BoneIndex];
+        const FTransform WorldBoneTM = LocalBoneTM * SkeletalMeshComponent->GetComponentTransform();
+        
         FBodyInstance* NewBody = new FBodyInstance();
         NewBody->BodySetup = BodySetup;
         NewBody->InstanceBodyIndex = i;
         NewBody->ComponentId = ComponentId; // 컴포넌트 ID 설정
-        NewBody->InitBody(World->GetPhysicsScene(), SkeletalMeshComponent);
+        NewBody->InitBody(World->GetPhysicsScene(), WorldBoneTM, SkeletalMeshComponent);
         OutBodies[i] = NewBody;
     }
 

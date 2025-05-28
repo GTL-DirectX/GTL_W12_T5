@@ -52,7 +52,7 @@ struct FBodyInstance : public FBodyInstanceCore
     float ComputedMAss = 0.0f; // Computed mass of the body instance, if not overridden
 
     // Body 생성
-    void InitBody(PxScene* Scene, class UPrimitiveComponent* Owner);
+    void InitBody(PxScene* Scene, const FTransform& InitWorldTransform, class UPrimitiveComponent* Owner);
 
     void UpdateComponentTransform(class UPrimitiveComponent* Owner, float DeltaTime);
 
