@@ -74,7 +74,7 @@ void PhysicsAssetEditorPanel::Render()
     const float BottomButtonY = Height - ButtonHeight - ButtonPanelPadding;
 
     // --- 좌상단 저장 버튼 ---
-    ImGui::SetNextWindowPos(ImVec2(ButtonPanelPadding, TopButtonY), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(Width - 170 - ButtonPanelPadding, TopButtonY), ImGuiCond_Always); // 버튼 너비만큼 왼쪽으로 이동
     ImGui::SetNextWindowSize(ImVec2(80, ButtonHeight), ImGuiCond_Always); // 버튼 크기에 맞게 조절
     ImGui::Begin("SaveAssetButton", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground);
     if (ImGui::Button("Save", ImVec2(-1, -1))) // -1은 사용 가능한 전체 너비/높이를 의미
