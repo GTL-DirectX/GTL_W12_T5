@@ -30,6 +30,30 @@ void UInputComponent::ProcessInput(float DeltaTime)
             KeyBindDelegate[FString("EditorE")].Broadcast(DeltaTime);
         }
     }
+    if (PressedKeys.Contains(EKeys::W))
+    {
+        KeyBindDelegate[FString("W")].Broadcast(DeltaTime);
+    }
+    if (PressedKeys.Contains(EKeys::A))
+    {
+        KeyBindDelegate[FString("A")].Broadcast(DeltaTime);
+    }
+    if (PressedKeys.Contains(EKeys::S))
+    {
+        KeyBindDelegate[FString("S")].Broadcast(DeltaTime);
+    }
+    if (PressedKeys.Contains(EKeys::D))
+    {
+        KeyBindDelegate[FString("D")].Broadcast(DeltaTime);
+    }
+    if (PressedKeys.Contains(EKeys::Q))
+    {
+        KeyBindDelegate[FString("Q")].Broadcast(DeltaTime);
+    }
+    if (PressedKeys.Contains(EKeys::E))
+    {
+        KeyBindDelegate[FString("E")].Broadcast(DeltaTime);
+    }
 }
 
 void UInputComponent::SetPossess()

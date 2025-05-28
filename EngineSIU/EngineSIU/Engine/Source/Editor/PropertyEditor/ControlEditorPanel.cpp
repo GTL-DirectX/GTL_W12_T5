@@ -44,6 +44,7 @@
 #include "Contents/Actors/SkeletalMeshActorTest.h"
 #include "Contents/Actors/TriggerBox.h"
 #include "Renderer/CompositingPass.h"
+#include "Actors/Vehicle.h"
 #include <Engine/FbxLoader.h>
 
 #include "Components/PostProcessVolume.h"
@@ -416,6 +417,7 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
             {.Label = "SkeletalMeshActor", .OBJ = OBJ_SKELETALMESH},
             {.Label = "SequencerPlayer", .OBJ = OBJ_SEQUENCERPLAYER},
             {.Label = "PostProcessVolume", .OBJ = OBJ_POSTPROCESSVOLUME},
+            {.Label = "Vehicle", .OBJ = OBJ_VEHICLE},
         };
 
         for (const auto& primitive : primitives)
@@ -569,6 +571,12 @@ void ControlEditorPanel::CreateModifyButton(const ImVec2 ButtonSize, ImFont* Ico
                     auto* MeshComp2 = SpawnedActor->AddComponent<UPostProcessVolume>();
                     SpawnedActor->SetRootComponent(MeshComp2);
                     SpawnedActor->SetActorLabel(TEXT("OBJ_POSTPROCESSVOLUME"));
+                }
+                case OBJ_VEHICLE:
+                {
+                    SpawnedActor = World->SpawnActor<AVehicle>();
+                    SpawnedActor->SetActorLabel(TEXT("OBJ_VEHICLE"));
+                    break;
                 }
                 case OBJ_CAMERA:
                 case OBJ_PLAYER:
