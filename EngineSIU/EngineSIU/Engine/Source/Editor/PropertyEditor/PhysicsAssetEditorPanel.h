@@ -43,6 +43,8 @@ private:
     void RenderDetailsPanel();
     void RenderObjectDetails(UObject* SelectedObject); // UObject의 프로퍼티를 표시하는 헬퍼 함수
     void RenderConstraintCreationUI(FName FirstBoneName, const FString& UiContextId);
+    void HandleDeleteSelectedBodySetup();
+    void HandleDeleteSelectedConstraintTemplate();
 
     // 스켈레톤 트리 렌더링 함수
     void RenderSkeletonTree();

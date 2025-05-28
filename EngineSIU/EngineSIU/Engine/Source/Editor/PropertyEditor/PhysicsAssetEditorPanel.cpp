@@ -199,9 +199,19 @@ void PhysicsAssetEditorPanel::RenderDetailsPanel()
     if (SelectedBodySetup)
     {
         ImGui::SeparatorText(*FString::Printf(TEXT("Body Setup: %s"), *SelectedBodySetup->BoneName.ToString()));
-        RenderObjectDetails(SelectedBodySetup); // UBodySetup (및 USkeletalBodySetup)의 프로퍼티 표시
 
+        // 삭제 버튼 추가
+
+        ImGui::SameLine(); // 필요하다면 다른 버튼과 같은 줄에 배치
+        
+        RenderObjectDetails(SelectedBodySetup); // UBodySetup (및 USkeletalBodySetup)의 프로퍼티 표시
         RenderConstraintCreationUI(SelectedBodySetup->BoneName, TEXT("FromSelectedBodySetup")); // UiContextId 전달
+
+        if (ImGui::Button(*FString::Printf(TEXT("Delete BodySetup: %s"), *SelectedBodySetup->BoneName.ToString())))
+        {
+            HandleDeleteSelectedBodySetup(); // 삭제 핸들러 호출
+            return; // 중요: 삭제 후에는 이 프레임에서 더 이상 이 객체에 접근하지 않도록 함
+        }
     }
     else if (SelectedConstraintTemplate)
     {
@@ -209,17 +219,20 @@ void PhysicsAssetEditorPanel::RenderDetailsPanel()
         FString ConstraintName = CI.JointName != NAME_None ? CI.JointName.ToString() : FString::Printf(TEXT("%s - %s"), *CI.ConstraintBone1.ToString(), *CI.ConstraintBone2.ToString());
 
         ImGui::SeparatorText(*FString::Printf(TEXT("Constraint: %s"), *ConstraintName));
+
+        // 삭제 버튼 추가
+
+        ImGui::SameLine();
+        // (만약 다른 버튼이 있다면) ImGui::Spacing();
+        
         RenderObjectDetails(SelectedConstraintTemplate); // UPhysicsConstraintTemplate의 프로퍼티
 
-        // // FConstraintInstance는 UObject가 아니므로 직접 RenderObjectDetails를 사용할 수 없음.
-        // // FConstraintInstance의 멤버들을 직접 ImGui 위젯으로 표시해야 함.
-        // ImGui::SeparatorText("Constraint Instance Details");
-        // // 예시:
-        // ImGui::Text("Constraint Bone 1: %s", *CI.ConstraintBone1.ToString());
-        // ImGui::Text("Constraint Bone 2: %s", *CI.ConstraintBone2.ToString());
-        // // ... FConstraintFrame, ELinearConstraintMotion 등을 위한 커스텀 UI 로직 ...
-        // // FImGuiWidget::DrawEnumCombo("X Motion", CI.XMotion); // 이런 헬퍼 함수가 있다면 사용
-        // // FImGuiWidget::DrawFloat("Linear Limit", CI.Limits.Linear);
+        if (ImGui::Button(*FString::Printf(TEXT("Delete Constraint: %s"), *ConstraintName)))
+        {
+            HandleDeleteSelectedConstraintTemplate(); // 삭제 핸들러 호출
+            // 삭제 후에는 SelectedConstraintTemplate이 유효하지 않으므로, 바로 리턴
+            return;
+        }
     }
     else if (SelectedBoneName != NAME_None)
     {
@@ -251,7 +264,7 @@ void PhysicsAssetEditorPanel::RenderDetailsPanel()
                 SelectedBodySetup = ExistingBodySetup; // 선택을 기존 BodySetup으로 변경
                 // SelectedBoneName은 유지하거나, BodySetup 선택 시 어떻게 할지 정책에 따라 결정
             }
-            // 또는 바로 RenderObjectDetails(ExistingBodySetup); 호출도 가능
+            RenderConstraintCreationUI(SelectedBoneName, TEXT("FromSelectedBoneWithBodySetup")); // UiContextId 전달
         }
         else
         {
@@ -608,5 +621,66 @@ void PhysicsAssetEditorPanel::LoadIcons()
         }
     }
     ImGui::PopID(); // ID 팝
+}
+
+void PhysicsAssetEditorPanel::HandleDeleteSelectedBodySetup()
+{
+    if (CurrentPhysicsAsset && SelectedBodySetup)
+    {
+        FName BodySetupNameToDelete = SelectedBodySetup->BoneName; // 로그용
+
+        // 1. CurrentPhysicsAsset->SkeletalBodySetups 배열에서 해당 BodySetup 제거
+        CurrentPhysicsAsset->SkeletalBodySetups.Remove(SelectedBodySetup);
+
+        // 2. 이 BodySetup을 참조하는 모든 Constraint도 함께 제거해야 함
+        for (int32 i = CurrentPhysicsAsset->ConstraintTemplates.Num() - 1; i >= 0; --i)
+        {
+            UPhysicsConstraintTemplate* Constraint = CurrentPhysicsAsset->ConstraintTemplates[i];
+            if (Constraint)
+            {
+                const FConstraintInstance& ConstraintInstance = Constraint->DefaultInstance;
+                if (ConstraintInstance.ConstraintBone1 == SelectedBodySetup->BoneName || ConstraintInstance.ConstraintBone2 == SelectedBodySetup->BoneName)
+                {
+                    // 만약 현재 선택된 Constraint가 삭제 대상 Constraint라면, 선택도 해제
+                    if (SelectedConstraintTemplate == Constraint)
+                    {
+                        SelectedConstraintTemplate = nullptr;
+                    }
+                    CurrentPhysicsAsset->ConstraintTemplates.RemoveAt(i);
+                    UE_LOG(ELogLevel::Display, TEXT("Automatically deleted Constraint referencing BodySetup %s: %s"), *BodySetupNameToDelete.ToString(), *(ConstraintInstance.JointName != NAME_None ? ConstraintInstance.JointName.ToString() : FString::Printf(TEXT("%s-%s"), *ConstraintInstance.ConstraintBone1.ToString(), *ConstraintInstance.ConstraintBone2.ToString())));
+                }
+            }
+        }
+
+        // 3. 내부 인덱스 맵 업데이트 (필요하다면)
+        CurrentPhysicsAsset->UpdateBodySetupIndexMap();
+
+        UE_LOG(ELogLevel::Display, TEXT("Deleted BodySetup: %s"), *BodySetupNameToDelete.ToString());
+        
+        // 4. 선택 상태 초기화
+        SelectedBodySetup = nullptr;
+        // SelectedBoneName = NAME_None; // 본 선택도 해제할지 여부 결정
+        
+    }
+}
+
+void PhysicsAssetEditorPanel::HandleDeleteSelectedConstraintTemplate()
+{
+    if (CurrentPhysicsAsset && SelectedConstraintTemplate)
+    {
+        FString ConstraintNameToDelete = SelectedConstraintTemplate->DefaultInstance.JointName != NAME_None ?
+                                         SelectedConstraintTemplate->DefaultInstance.JointName.ToString() :
+                                         FString::Printf(TEXT("%s - %s"), *SelectedConstraintTemplate->DefaultInstance.ConstraintBone1.ToString(), *SelectedConstraintTemplate->DefaultInstance.ConstraintBone2.ToString());
+
+
+        // 1. CurrentPhysicsAsset->ConstraintTemplates 배열에서 해당 ConstraintTemplate 제거
+        CurrentPhysicsAsset->ConstraintTemplates.Remove(SelectedConstraintTemplate);
+
+
+        UE_LOG(ELogLevel::Display, TEXT("Deleted ConstraintTemplate: %s"), *ConstraintNameToDelete);
+
+        // 3. 선택 상태 초기화
+        SelectedConstraintTemplate = nullptr;
+    }
 }
 
