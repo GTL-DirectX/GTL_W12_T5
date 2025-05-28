@@ -35,5 +35,7 @@ private:
     void CleanUpBlurFarPass(const std::shared_ptr<FEditorViewportClient>& Viewport);
     void PrepareCompositePass(const std::shared_ptr<FEditorViewportClient>& Viewport);
     void CleanUpCompositePass(const std::shared_ptr<FEditorViewportClient>& Viewport);
+    void PrepareDebugPass(const std::shared_ptr<FEditorViewportClient>& Viewport);
+    void CleanUpDebugPass(const std::shared_ptr<FEditorViewportClient>& Viewport);
 };
 

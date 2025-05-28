@@ -201,3 +201,32 @@ float4 PS_Composite(PS_INPUT IN) : SV_Target
 
     return float4(result, 1);
 }
+
+float4 PS_DebugCoC(PS_INPUT IN) : SV_Target
+{
+    float signedCoC = CoCTexture.Sample(LinearSampler, IN.UV).r;
+    float absCoc = abs(signedCoC);
+    float thresh = 0.2f;
+    float rampStart = thresh * 0.2f;
+    // rampStart ~ thresh 구간에서만 0→1 보간
+    float t = smoothstep(rampStart, thresh, absCoc);
+    
+    // 0일 때는 흰색, threshold일 때 전경/배경 색상으로 완전 전환
+    float3 focusCol = float3(0, 0, 0);
+    float3 nearCol = float3(0, 1, 0);
+    float3 farCol = float3(0, 0, 1);
+
+    float3 result;
+    if (signedCoC < 0.0f)
+    {
+        // 전경: 흰색 → 녹색
+        result = lerp(focusCol, nearCol, t);
+    }
+    else
+    {
+        // 배경: 흰색 → 파랑
+        result = lerp(focusCol, farCol, t);
+    }
+
+    return float4(result, 0.9);
+}
