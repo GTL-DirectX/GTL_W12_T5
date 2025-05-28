@@ -132,7 +132,7 @@ public:
     FBodyInstance BodyInstance;
 
 public:
-    void UpdateFromPhysics(float DeltaTime);
+    virtual void UpdateFromPhysics(float DeltaTime);
 
     UPROPERTY(EditAnywhere, EPhysicsBodyType, PhysicsBodyType, = EPhysicsBodyType::Static) // Default to static body
     

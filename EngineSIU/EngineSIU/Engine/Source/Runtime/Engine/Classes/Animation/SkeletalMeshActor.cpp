@@ -1,7 +1,9 @@
 #include "SkeletalMeshActor.h"
 
-#include "Components/SkeletalMeshComponent.h"
 #include "Engine/AssetManager.h"
+
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/Asset/SkeletalMeshAsset.h"
 
 ASkeletalMeshActor::ASkeletalMeshActor()
 {
