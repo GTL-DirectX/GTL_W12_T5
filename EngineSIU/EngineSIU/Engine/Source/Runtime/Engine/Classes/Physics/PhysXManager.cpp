@@ -33,13 +33,15 @@ void FPhysXManager::InitPhysX()
     PvdInstance = PxCreatePvd(*Foundation);
     Transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10);
     PvdInstance->connect(*Transport, PxPvdInstrumentationFlag::eALL);
-
+    
     Physics = PxCreatePhysics(PX_PHYSICS_VERSION, *Foundation, Scale, true, PvdInstance);
     if (!Physics)
     {
         UE_LOG(ELogLevel::Error, TEXT("Failed to create PxPhysics!"));
         return;
     }
+
+    PxInitExtensions(*Physics, PvdInstance);
 
     // Cooking 생성 (Convex Mesh, Triangle Mesh 등 cook 용)
     PxCookingParams CookingParams(Scale);
