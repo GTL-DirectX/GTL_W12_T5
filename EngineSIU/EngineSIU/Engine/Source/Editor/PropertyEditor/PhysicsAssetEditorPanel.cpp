@@ -32,7 +32,7 @@ void PhysicsAssetEditorPanel::Render()
 
     USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(Engine->GetSelectedComponent());
 
-    if (SkeletalMeshComponent)
+    if (SkeletalMeshComponent and SkeletalMeshComponent->GetSkeletalMeshAsset() != CurrentSkeletalMesh)
     {
         SetSkeletalMesh(SkeletalMeshComponent->GetSkeletalMeshAsset());
     }
