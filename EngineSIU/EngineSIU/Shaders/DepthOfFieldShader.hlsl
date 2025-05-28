@@ -204,25 +204,29 @@ float4 PS_Composite(PS_INPUT IN) : SV_Target
 
 float4 PS_DebugCoC(PS_INPUT IN) : SV_Target
 {
-    // CoC 텍스처에서 사인값 읽기
     float signedCoC = CoCTexture.Sample(LinearSampler, IN.UV).r;
+    float absCoc = abs(signedCoC);
+    float thresh = 0.2f;
+    float rampStart = thresh * 0.2f;
+    // rampStart ~ thresh 구간에서만 0→1 보간
+    float t = smoothstep(rampStart, thresh, absCoc);
     
-    // InFocusThreshold는 b0 상수버퍼에 이미 정의되어 있습니다.
-    float thresh = InFocusThreshold;
-    
-    // |CoC| < thresh 면 초점(흰색)
-    if (abs(signedCoC) < 0.2)
+    // 0일 때는 흰색, threshold일 때 전경/배경 색상으로 완전 전환
+    float3 focusCol = float3(0, 0, 0);
+    float3 nearCol = float3(0, 1, 0);
+    float3 farCol = float3(0, 0, 1);
+
+    float3 result;
+    if (signedCoC < 0.0f)
     {
-        return float4(0, 0, 0, 0.9);
+        // 전경: 흰색 → 녹색
+        result = lerp(focusCol, nearCol, t);
     }
-    // 음수면 전경 (녹색)
-    else if (signedCoC < 0.0f)
-    {
-        return float4(0, 1, 0, 0.9);
-    }
-    // 양수면 배경 (파란색)
     else
     {
-        return float4(0, 0, 1, 0.9);
+        // 배경: 흰색 → 파랑
+        result = lerp(focusCol, farCol, t);
     }
+
+    return float4(result, 0.9);
 }
