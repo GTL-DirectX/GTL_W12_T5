@@ -629,6 +629,10 @@ void APlayer::Tick(float DeltaTime)
     AActor::Tick(DeltaTime);
 }
 
+void APlayer::SetUpPlayerInputComponent(UInputComponent* InInputComponent)
+{
+}
+
 ASequencerPlayer::ASequencerPlayer()
 {
 }

@@ -9,7 +9,7 @@ public:
     virtual UObject* Duplicate(UObject* InOuter) override;
     virtual void Tick(float DeltaTime) override;    
     virtual void PostSpawnInitialize() override;
-    void SetUpPlayerInputComponent(UInputComponent* InInputComponent);
+    virtual void SetUpPlayerInputComponent(UInputComponent* InInputComponent) override;
 private:
     void MoveForward(float DeltaTime);
     void MoveRight(float DeltaTime);

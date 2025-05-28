@@ -18,20 +18,26 @@ void ADefaultPlayer::Tick(float DeltaTime)
 void ADefaultPlayer::PostSpawnInitialize()
 {
     Super::PostSpawnInitialize();
-    APlayerController* PC = GEngine->ActiveWorld->GetPlayerController();
-    if (PC)
-    {
-        PC->BindAction("W", [this](float DeltaTime) { MoveForward(DeltaTime); });
-        PC->BindAction("S", [this](float DeltaTime) { MoveForward(-DeltaTime); });
-        PC->BindAction("A", [this](float DeltaTime) { MoveRight(-DeltaTime); });
-        PC->BindAction("D", [this](float DeltaTime) { MoveRight(DeltaTime); });
-        PC->BindAction("Q", [this](float DeltaTime) { MoveUp(DeltaTime); });
-        PC->BindAction("E", [this](float DeltaTime) { MoveUp(-DeltaTime); });
-    }
+    //APlayerController* PC = GEngine->ActiveWorld->GetPlayerController();
+    //if (PC)
+    //{
+    //    PC->BindAction("W", [this](float DeltaTime) { MoveForward(DeltaTime); });
+    //    PC->BindAction("S", [this](float DeltaTime) { MoveForward(-DeltaTime); });
+    //    PC->BindAction("A", [this](float DeltaTime) { MoveRight(-DeltaTime); });
+    //    PC->BindAction("D", [this](float DeltaTime) { MoveRight(DeltaTime); });
+    //    PC->BindAction("Q", [this](float DeltaTime) { MoveUp(DeltaTime); });
+    //    PC->BindAction("E", [this](float DeltaTime) { MoveUp(-DeltaTime); });
+    //}
 }
 
 void ADefaultPlayer::SetUpPlayerInputComponent(UInputComponent* InInputComponent)
 {
+    InInputComponent->BindAction("W", [this](float DeltaTime) { MoveForward(DeltaTime); });
+    InInputComponent->BindAction("S", [this](float DeltaTime) { MoveForward(-DeltaTime); });
+    InInputComponent->BindAction("A", [this](float DeltaTime) { MoveRight(-DeltaTime); });
+    InInputComponent->BindAction("D", [this](float DeltaTime) { MoveRight(DeltaTime); });
+    InInputComponent->BindAction("Q", [this](float DeltaTime) { MoveUp(DeltaTime); });
+    InInputComponent->BindAction("E", [this](float DeltaTime) { MoveUp(-DeltaTime); });
 }
 
 void ADefaultPlayer::MoveForward(float DeltaTime)

@@ -13,7 +13,7 @@ class USceneComponent;
 class UPrimitiveComponent;
 class FEditorViewportClient;
 class UStaticMeshComponent;
-
+class UInputComponent;
 class AEditorPlayer : public AActor
 {
     DECLARE_CLASS(AEditorPlayer, AActor)
@@ -65,6 +65,7 @@ public:
 
     virtual UObject* Duplicate(UObject* InOuter) override;
     virtual void Tick(float DeltaTime) override;
+    virtual void SetUpPlayerInputComponent(UInputComponent* InInputComponent);
 };
 
 #pragma region W10
