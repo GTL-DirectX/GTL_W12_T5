@@ -11,6 +11,7 @@
 #include "Physics/PhysicsConstraintTemplate.h"
 #include "Physics/PhysXManager.h"
 #include "UnrealEd/ImGuiWidget.h"
+#include "World/SimulationViewerWorld.h"
 
 PhysicsAssetEditorPanel::PhysicsAssetEditorPanel()
 {
@@ -161,6 +162,31 @@ void PhysicsAssetEditorPanel::Render()
         Engine->EndPhysicsViewer(); // 이런 함수가 있다고 가정
     }
     ImGui::End();
+
+    
+
+    if (SelectedBoneName != NAME_None)
+    {
+        //// SelectBoneIndex 처리
+        const FReferenceSkeleton& RefSkeleton = CurrentSkeletalMesh->GetSkeleton()->GetReferenceSkeleton();
+
+        for (int32 i = 0; i < RefSkeleton.GetRawBoneNum(); ++i)
+        {
+            if (RefSkeleton.RawRefBoneInfo[i].Name == SelectedBoneName) // 루트 본인 경우
+            {
+                if (UPhysicsViewerWorld* PhysicsViewerWorld = Cast<UPhysicsViewerWorld>(Engine->ActiveWorld))
+                {
+                    PhysicsViewerWorld->SelectBoneIndex = i; // PhysicsViewerWorld에 선택된 본 인덱스 설정
+                }
+                else if (USimulationViewerWorld* SimulationViewerWorld = Cast<USimulationViewerWorld>(Engine->ActiveWorld))
+                {
+                    SimulationViewerWorld->SelectBoneIndex = i; // SkeletalViewerWorld에 선택된 본 인덱스 설정
+                }
+                break; // 찾았으면 루프 종료
+            }
+        }
+    }
+
 }
 
 void PhysicsAssetEditorPanel::SetSkeletalMesh(USkeletalMesh* InSkeletalMesh)
