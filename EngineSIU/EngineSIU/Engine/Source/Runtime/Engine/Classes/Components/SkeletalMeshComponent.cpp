@@ -458,97 +458,71 @@ void USkeletalMeshComponent::CPUSkinning(bool bForceUpdate)
            }
      }
 }
+
 void USkeletalMeshComponent::UpdateFromPhysics(float DeltaTime)
 {
-    // SCOPED_READ_LOCK(GetWorld()->GetPhysicsScene()) // 필요하다면 PhysX 씬 읽기 잠금
+    Super::UpdateFromPhysics(DeltaTime);
 
-    Super::UpdateFromPhysics(DeltaTime); // 부모 클래스의 업데이트 호출 (중요할 수 있음)
-
-    if (/*!bRagdollActivated || */!SkeletalMeshAsset || !SkeletalMeshAsset->GetSkeleton())
-    {
-        // 랙돌이 활성화되지 않았거나, 필요한 에셋이 없으면 아무것도 하지 않음
+    if (!SkeletalMeshAsset || !SkeletalMeshAsset->GetSkeleton())
         return;
-    }
 
     const FReferenceSkeleton& RefSkeleton = SkeletalMeshAsset->GetSkeleton()->GetReferenceSkeleton();
-    const int32 BoneNum = RefSkeleton.GetRawBoneNum();
-
-    if (BoneNum == 0) // 본이 없으면 처리할 것이 없음
-    {
+    const int32 NumBones = RefSkeleton.GetRawBoneNum();
+    if (NumBones == 0)
         return;
-    }
 
-    // PhysicsGlobalBoneMatrix 배열 크기 준비
-    // 이 배열은 각 본의 "컴포넌트 공간에서의 글로벌 트랜스폼"을 저장합니다.
-    PhysicsGlobalBoneMatrix.Empty();
-    PhysicsGlobalBoneMatrix.SetNum(BoneNum);
+    // 월드 공간 기준 Bone 트랜스폼 저장
+    TArray<FMatrix> BoneWorldMatrices;
+    BoneWorldMatrices.SetNum(NumBones);
 
-    // 1. 현재 애니메이션 포즈를 기준으로 모든 본의 컴포넌트 공간 글로벌 매트릭스를 계산하여
-    //    PhysicsGlobalBoneMatrix를 초기화합니다.
-    //    GetCurrentGlobalBoneMatrices가 이미 컴포넌트 공간 기준이라고 가정합니다.
-    GetCurrentGlobalBoneMatrices(PhysicsGlobalBoneMatrix);
-
-    // 2. 물리 시뮬레이션에 참여하는 각 FBodyInstance에 대해,
-    //    해당 물리 바디의 월드 트랜스폼을 가져와 컴포넌트 공간으로 변환하고,
-    //    PhysicsGlobalBoneMatrix의 해당 본 인덱스 위치를 덮어씁니다.
-    if (!Bodies.IsEmpty()) // 물리 바디가 하나라도 있을 때만 이 로직 수행
+    // 1. 물리 바디가 적용된 본은 월드 좌표를 직접 가져와서 저장
+    for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
     {
-        FMatrix ComponentToWorld = GetWorldMatrix();
-        FMatrix WorldToComponent = FMatrix::Inverse(ComponentToWorld); // 월드 -> 컴포넌트 변환 행렬
+        BoneWorldMatrices[BoneIndex] = FMatrix::Identity;
 
         for (FBodyInstance* Body : Bodies)
         {
             if (!Body || !Body->BodySetup || !Body->PxRigidActor)
                 continue;
 
-            const FName BoneName = Body->BodySetup->BoneName;
-            const int32 BoneIndex = RefSkeleton.FindBoneIndex(BoneName);
-            if (BoneIndex == INDEX_NONE)
-                continue;
-
-            // PhysX 월드 트랜스폼을 가져와서 FMatrix로 변환
-            FTransform PhysBodyWorldFTransform = FromPxTransform(Body->PxRigidActor->getGlobalPose());
-            FMatrix PhysBodyWorldTM = PhysBodyWorldFTransform.ToMatrixWithScale();
-
-            // 물리 바디의 월드 트랜스폼을 컴포넌트 공간으로 변환하여 PhysicsGlobalBoneMatrix 덮어쓰기
-            PhysicsGlobalBoneMatrix[BoneIndex] = PhysBodyWorldTM * WorldToComponent;
+            if (RefSkeleton.FindBoneIndex(Body->BodySetup->BoneName) == BoneIndex)
+            {
+                const FTransform WorldTM = FromPxTransform(Body->PxRigidActor->getGlobalPose());
+                BoneWorldMatrices[BoneIndex] = WorldTM.ToMatrixWithScale();
+                break;
+            }
         }
     }
 
-    for (int32 BoneIndex = 0; BoneIndex < BoneNum; ++BoneIndex)
+    // 2. 물리 바디가 없는 본은 부모의 월드 트랜스폼과 RefPose를 통해 계산
+    for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
     {
-        // 현재 본의 컴포넌트 공간에서의 최종 트랜스폼 (애니메이션 또는 물리 결과)
-        const FMatrix& CurrentBoneComponentTM = PhysicsGlobalBoneMatrix[BoneIndex];
-
-        int32 ParentIndex = RefSkeleton.RawRefBoneInfo[BoneIndex].ParentIndex;
-        FMatrix LocalMatrix;
-
-        if (ParentIndex != INDEX_NONE)
+        if (BoneWorldMatrices[BoneIndex].Equals(FMatrix::Identity))
         {
-            // 부모 본의 컴포넌트 공간 트랜스폼
-            // PhysicsGlobalBoneMatrix[ParentIndex]는 이미 올바른 값 (애니메이션 또는 물리)으로 채워져 있어야 함
-            const FMatrix& ParentBoneComponentTM = PhysicsGlobalBoneMatrix[ParentIndex];
-            FMatrix InverseParentBoneComponentTM = FMatrix::Inverse(ParentBoneComponentTM);
+            const int32 ParentIndex = RefSkeleton.GetParentIndex(BoneIndex);
+            FMatrix ParentWorldMatrix = (ParentIndex == INDEX_NONE)
+                ? GetComponentTransform().ToMatrixWithScale()
+                : BoneWorldMatrices[ParentIndex];
 
-            // 자식 본의 로컬 트랜스폼 = 자식 본의 컴포넌트 공간 트랜스폼 * 부모 본의 컴포넌트 공간 트랜스폼의 역행렬
-            LocalMatrix = CurrentBoneComponentTM * InverseParentBoneComponentTM;
+            const FMatrix LocalMatrix = RefSkeleton.GetRawRefBonePose()[BoneIndex].ToMatrixWithScale();
+            BoneWorldMatrices[BoneIndex] = LocalMatrix * ParentWorldMatrix;
         }
-        else // 루트 본인 경우
-        {
-            // 루트 본의 로컬 트랜스폼은 컴포넌트 공간 트랜스폼과 동일
-            LocalMatrix = CurrentBoneComponentTM;
-        }
-
-        // 계산된 로컬 FMatrix를 FTransform으로 변환하여 BonePoseContext.Pose에 저장
-        FTransform LocalTransform = FTransform(LocalMatrix);
-        FTransform Trans = BonePoseContext.Pose[BoneIndex];
-        if (LocalTransform.Translation != Trans.Translation)
-        {
-            int a = 0;
-        }
-        BonePoseContext.Pose[BoneIndex] = LocalTransform;
     }
 
+    // 3. BonePoseContext.Pose를 갱신: 컴포넌트 로컬 공간 기준
+    for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+    {
+        const int32 ParentIndex = RefSkeleton.GetParentIndex(BoneIndex);
+        FMatrix ParentWorldMatrix = (ParentIndex == INDEX_NONE)
+            ? GetComponentTransform().ToMatrixWithScale()
+            : BoneWorldMatrices[ParentIndex];
+
+        const FMatrix CurrentWorldMatrix = BoneWorldMatrices[BoneIndex];
+        const FMatrix LocalMatrix = CurrentWorldMatrix * FMatrix::Inverse(ParentWorldMatrix);
+        BonePoseContext.Pose[BoneIndex] = FTransform(LocalMatrix);
+    }
+
+    CPUSkinning(); // GPU Skinning을 안 쓰는 경우
 }
 
 void USkeletalMeshComponent::ActivateRagdoll()
