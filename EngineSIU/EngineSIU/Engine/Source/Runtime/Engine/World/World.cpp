@@ -121,7 +121,7 @@ void UWorld::Tick(float DeltaTime)
 {
     TimeSeconds += DeltaTime;
     
-    if (PhysicsScene)
+    if (PhysicsScene && WorldType != EWorldType::Editor)
     {
         PhysicsScene->simulate(DeltaTime);
         PhysicsScene->fetchResults(true);

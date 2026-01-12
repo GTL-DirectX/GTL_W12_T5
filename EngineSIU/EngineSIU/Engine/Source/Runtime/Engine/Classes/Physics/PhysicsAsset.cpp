@@ -158,8 +158,16 @@ void UPhysicsAsset::CreatePhysicsInstance(UWorld* World, USkeletalMeshComponent*
         const FName& ChildBone = Template->DefaultInstance.ConstraintBone1;
         const FName& ParentBone = Template->DefaultInstance.ConstraintBone2;
 
-        const int32 ChildIndex = BodySetupIndexMap.FindRef(ChildBone);
-        const int32 ParentIndex = BodySetupIndexMap.FindRef(ParentBone);
+        const int32* ChildIndexPtr = BodySetupIndexMap.Find(ChildBone);
+        const int32* ParentIndexPtr = BodySetupIndexMap.Find(ParentBone);
+
+        if (!ChildIndexPtr || !ParentIndexPtr)
+        {
+            continue;
+        }
+
+        const int32 ChildIndex = *ChildIndexPtr;
+        const int32 ParentIndex = *ParentIndexPtr;
 
         if (!OutBodies.IsValidIndex(ChildIndex) || !OutBodies.IsValidIndex(ParentIndex))
         {

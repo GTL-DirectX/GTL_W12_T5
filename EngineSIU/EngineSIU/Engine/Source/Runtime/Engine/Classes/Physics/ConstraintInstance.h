@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "PhysicalMaterial.h"
 #include "UObject/ObjectMacros.h"
@@ -8,6 +8,7 @@ struct FBodyInstance;
 namespace physx
 {
     class PxScene;
+    class PxD6Joint;
 }
 
 enum class ELinearConstraintMotion : uint8 { Locked, Limited, Free };
@@ -124,6 +125,8 @@ public:
         FConstraintBreakData, BreakInfo, {};
     )
 
+    physx::PxD6Joint* JointHandle = nullptr;
+
     /*=========== API ===========*/
     void InitConstraint(FBodyInstance* Body1, FBodyInstance* Body2);
     void TermConstraint();
@@ -182,3 +185,4 @@ inline FArchive& operator<<(FArchive& Ar, FConstraintInstance& Value)
     return Ar;
     
 }
+

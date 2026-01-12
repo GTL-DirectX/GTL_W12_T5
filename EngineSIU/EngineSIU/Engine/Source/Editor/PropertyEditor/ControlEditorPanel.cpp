@@ -238,7 +238,13 @@ void ControlEditorPanel::CreateMenuButton(const ImVec2 ButtonSize, ImFont* IconF
     {
         if (UEditorEngine* EditorEngine = Cast<UEditorEngine>(GEngine))
         {
-            EditorEngine->StartPhysicsViewer("Contents/Human/Human");
+            if (USkeletalMeshComponent* SkeletalMeshComp = Cast<USkeletalMeshComponent>(EditorEngine->GetSelectedComponent()))
+            {
+                if (SkeletalMeshComp->GetSkeletalMeshAsset())
+                {
+                    EditorEngine->StartPhysicsViewer(SkeletalMeshComp->GetSkeletalMeshAsset());
+                }
+            }
         }
     }
 

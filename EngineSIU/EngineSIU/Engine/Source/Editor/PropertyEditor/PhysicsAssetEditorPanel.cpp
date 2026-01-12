@@ -8,10 +8,15 @@
 #include "Engine/SkeletalMesh.h"
 #include "Physics/ConstraintInstance.h"
 #include "Physics/PhysicsAsset.h"
+#include "Physics/BodySetup.h"
 #include "Physics/PhysicsConstraintTemplate.h"
 #include "Physics/PhysXManager.h"
 #include "UnrealEd/ImGuiWidget.h"
 #include "World/SimulationViewerWorld.h"
+#include "Engine/AssetManager.h"
+#include "UObject/ObjectFactory.h"
+#include "Math/Matrix.h"
+#include "Math/Quat.h"
 
 PhysicsAssetEditorPanel::PhysicsAssetEditorPanel()
 {
@@ -72,6 +77,32 @@ void PhysicsAssetEditorPanel::Render()
     const float ButtonPanelPadding = 5.0f; // 버튼과 창 가장자리 사이의 간격
     const float TopButtonY = ButtonPanelPadding;
     const float BottomButtonY = Height - ButtonHeight - ButtonPanelPadding;
+
+    // --- 좌상단 자동 생성/정리 버튼 ---
+    const float TopActionPosX = 600.0f;
+    ImGui::SetNextWindowPos(ImVec2(TopActionPosX, TopButtonY), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(110, ButtonHeight), ImGuiCond_Always);
+    ImGui::Begin("AutoRebuildButton", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground);
+    if (ImGui::Button("Rebuild\nConstraints", ImVec2(-1, -1)))
+    {
+        RebuildConstraintsFromSkeleton(true);
+        SelectedBoneName = NAME_None;
+        SelectedBodySetup = nullptr;
+        SelectedConstraintTemplate = nullptr;
+    }
+    ImGui::End();
+
+    ImGui::SetNextWindowPos(ImVec2(TopActionPosX + 120.0f, TopButtonY), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(90, ButtonHeight), ImGuiCond_Always);
+    ImGui::Begin("CleanButton", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground);
+    if (ImGui::Button("Clean", ImVec2(-1, -1)))
+    {
+        CleanConstraints(true);
+        SelectedBoneName = NAME_None;
+        SelectedBodySetup = nullptr;
+        SelectedConstraintTemplate = nullptr;
+    }
+    ImGui::End();
 
     // --- 좌상단 저장 버튼 ---
     ImGui::SetNextWindowPos(ImVec2(Width - 170 - ButtonPanelPadding, TopButtonY), ImGuiCond_Always); // 버튼 너비만큼 왼쪽으로 이동
@@ -188,6 +219,290 @@ void PhysicsAssetEditorPanel::Render()
         }
     }
 
+}
+
+int32 PhysicsAssetEditorPanel::FindParentBodyBoneIndex(const FReferenceSkeleton& RefSkeleton, int32 ChildBoneIndex) const
+{
+    if (!CurrentPhysicsAsset)
+    {
+        return INDEX_NONE;
+    }
+
+    int32 ParentIndex = RefSkeleton.GetParentIndex(ChildBoneIndex);
+    while (ParentIndex != INDEX_NONE)
+    {
+        const FName ParentBoneName = RefSkeleton.RawRefBoneInfo[ParentIndex].Name;
+        if (const int32* BodyIndex = CurrentPhysicsAsset->BodySetupIndexMap.Find(ParentBoneName))
+        {
+            return *BodyIndex;
+        }
+        ParentIndex = RefSkeleton.GetParentIndex(ParentIndex);
+    }
+    return INDEX_NONE;
+}
+
+namespace
+{
+    bool ShouldSkipAutoBodyBone(const FName& BoneName)
+    {
+        const FString Name = BoneName.ToString();
+        return Name.Contains(TEXT("End")) || Name.Contains(TEXT("IK")) || Name.Contains(TEXT("Twist"));
+    }
+
+    FRotator MakeRotationFromZAxis(const FVector& ZAxis)
+    {
+        const FVector Z = ZAxis.GetSafeNormal();
+        FVector X = FVector::ForwardVector;
+        if (FMath::Abs(Z | X) > 0.98f)
+        {
+            X = FVector::RightVector;
+        }
+        FVector Y = Z ^ X;
+        Y = Y.GetSafeNormal();
+        X = Y ^ Z;
+
+        FMatrix M = FMatrix::Identity;
+        M.SetAxis(0, X);
+        M.SetAxis(1, Y);
+        M.SetAxis(2, Z);
+        return FRotator(M.ToQuat());
+    }
+}
+
+void PhysicsAssetEditorPanel::RebuildConstraintsFromSkeleton(bool bAutoSave)
+{
+    if (!CurrentPhysicsAsset || !CurrentSkeletalMesh || !CurrentSkeletalMesh->GetSkeleton())
+    {
+        return;
+    }
+
+    const FReferenceSkeleton& RefSkeleton = CurrentSkeletalMesh->GetSkeleton()->GetReferenceSkeleton();
+    CurrentPhysicsAsset->SkeletalBodySetups.Empty();
+    CurrentPhysicsAsset->ConstraintTemplates.Empty();
+
+    const int32 BoneCount = RefSkeleton.GetRawBoneNum();
+    if (BoneCount == 0)
+    {
+        return;
+    }
+
+    TArray<FMatrix> GlobalRefMatrices;
+    GlobalRefMatrices.SetNum(BoneCount);
+    for (int32 BoneIndex = 0; BoneIndex < BoneCount; ++BoneIndex)
+    {
+        FMatrix LocalMatrix = RefSkeleton.RawRefBonePose[BoneIndex].ToMatrixWithScale();
+        const int32 ParentIndex = RefSkeleton.RawRefBoneInfo[BoneIndex].ParentIndex;
+        if (ParentIndex != INDEX_NONE)
+        {
+            LocalMatrix = LocalMatrix * GlobalRefMatrices[ParentIndex];
+        }
+        GlobalRefMatrices[BoneIndex] = LocalMatrix;
+    }
+
+    for (int32 BoneIndex = 0; BoneIndex < BoneCount; ++BoneIndex)
+    {
+        const FName BoneName = RefSkeleton.RawRefBoneInfo[BoneIndex].Name;
+        if (RefSkeleton.RawRefBoneInfo[BoneIndex].ParentIndex == INDEX_NONE)
+        {
+            continue; // skip root
+        }
+        if (ShouldSkipAutoBodyBone(BoneName))
+        {
+            continue;
+        }
+
+        int32 ChildIndex = INDEX_NONE;
+        for (int32 Candidate = 0; Candidate < BoneCount; ++Candidate)
+        {
+            if (RefSkeleton.RawRefBoneInfo[Candidate].ParentIndex == BoneIndex)
+            {
+                ChildIndex = Candidate;
+                break;
+            }
+        }
+
+        FVector DirectionWorld = FVector::ForwardVector;
+        if (ChildIndex != INDEX_NONE)
+        {
+            const FVector BonePos = GlobalRefMatrices[BoneIndex].GetTranslationVector();
+            const FVector ChildPos = GlobalRefMatrices[ChildIndex].GetTranslationVector();
+            DirectionWorld = (ChildPos - BonePos);
+        }
+        else
+        {
+            const int32 ParentIndex = RefSkeleton.RawRefBoneInfo[BoneIndex].ParentIndex;
+            if (ParentIndex != INDEX_NONE)
+            {
+                const FVector BonePos = GlobalRefMatrices[BoneIndex].GetTranslationVector();
+                const FVector ParentPos = GlobalRefMatrices[ParentIndex].GetTranslationVector();
+                DirectionWorld = (BonePos - ParentPos);
+            }
+        }
+
+        float Length = DirectionWorld.Length();
+        if (Length < 1.0f)
+        {
+            Length = 4.0f;
+            DirectionWorld = FVector::ForwardVector;
+        }
+
+        const FMatrix BoneWorld = GlobalRefMatrices[BoneIndex];
+        const FMatrix BoneWorldInv = FMatrix::Inverse(BoneWorld);
+        const FVector LocalDir = FMatrix::TransformVector(DirectionWorld, BoneWorldInv).GetSafeNormal();
+
+        USkeletalBodySetup* NewBodySetup = FObjectFactory::ConstructObject<USkeletalBodySetup>(CurrentPhysicsAsset);
+        if (!NewBodySetup)
+        {
+            continue;
+        }
+
+        NewBodySetup->BoneName = BoneName;
+
+        FKSphereElem Sphere;
+        Sphere.Radius = FMath::Max(2.0f, Length * 0.25f);
+        Sphere.Center = LocalDir * (Length * 0.5f);
+        NewBodySetup->AggGeom.SphereElems.Add(Sphere);
+
+        CurrentPhysicsAsset->SkeletalBodySetups.Add(NewBodySetup);
+    }
+
+    CurrentPhysicsAsset->UpdateBodySetupIndexMap();
+
+    for (USkeletalBodySetup* BodySetup : CurrentPhysicsAsset->SkeletalBodySetups)
+    {
+        if (!BodySetup)
+        {
+            continue;
+        }
+
+        const int32 ChildBoneIndex = RefSkeleton.FindBoneIndex(BodySetup->BoneName);
+        if (ChildBoneIndex == INDEX_NONE)
+        {
+            continue;
+        }
+
+        const int32 ParentBodyIndex = FindParentBodyBoneIndex(RefSkeleton, ChildBoneIndex);
+        if (ParentBodyIndex == INDEX_NONE || !CurrentPhysicsAsset->SkeletalBodySetups.IsValidIndex(ParentBodyIndex))
+        {
+            continue;
+        }
+
+        USkeletalBodySetup* ParentBodySetup = CurrentPhysicsAsset->SkeletalBodySetups[ParentBodyIndex];
+        if (!ParentBodySetup)
+        {
+            continue;
+        }
+
+        UPhysicsConstraintTemplate* NewConstraint = FObjectFactory::ConstructObject<UPhysicsConstraintTemplate>(CurrentPhysicsAsset);
+        if (!NewConstraint)
+        {
+            continue;
+        }
+
+        NewConstraint->DefaultInstance.ConstraintBone1 = BodySetup->BoneName; // Child
+        NewConstraint->DefaultInstance.ConstraintBone2 = ParentBodySetup->BoneName; // Parent
+        NewConstraint->DefaultInstance.JointName = FName(*FString::Printf(TEXT("[%s -> %s] Constraint"), *BodySetup->BoneName.ToString(), *ParentBodySetup->BoneName.ToString()));
+        NewConstraint->DefaultInstance.bDisableCollision = true;
+
+        NewConstraint->DefaultInstance.XMotion = ELinearConstraintMotion::Locked;
+        NewConstraint->DefaultInstance.YMotion = ELinearConstraintMotion::Locked;
+        NewConstraint->DefaultInstance.ZMotion = ELinearConstraintMotion::Locked;
+        NewConstraint->DefaultInstance.Swing1Motion = EAngularConstraintMotion::Limited;
+        NewConstraint->DefaultInstance.Swing2Motion = EAngularConstraintMotion::Limited;
+        NewConstraint->DefaultInstance.TwistMotion = EAngularConstraintMotion::Limited;
+
+        CurrentPhysicsAsset->ConstraintTemplates.Add(NewConstraint);
+    }
+
+    CurrentPhysicsAsset->UpdateBodySetupIndexMap();
+
+    if (bAutoSave)
+    {
+        UAssetManager::Get().SavePhysicsAssets(CurrentPhysicsAsset, CurrentPhysicsAsset->GetName());
+    }
+}
+
+void PhysicsAssetEditorPanel::CleanConstraints(bool bAutoSave)
+{
+    if (!CurrentPhysicsAsset || !CurrentSkeletalMesh || !CurrentSkeletalMesh->GetSkeleton())
+    {
+        return;
+    }
+
+    const FReferenceSkeleton& RefSkeleton = CurrentSkeletalMesh->GetSkeleton()->GetReferenceSkeleton();
+    CurrentPhysicsAsset->UpdateBodySetupIndexMap();
+
+    TSet<FString> SeenPairs;
+
+    for (int32 i = CurrentPhysicsAsset->ConstraintTemplates.Num() - 1; i >= 0; --i)
+    {
+        UPhysicsConstraintTemplate* ConstraintTemplate = CurrentPhysicsAsset->ConstraintTemplates[i];
+        if (!ConstraintTemplate)
+        {
+            CurrentPhysicsAsset->ConstraintTemplates.RemoveAt(i);
+            continue;
+        }
+
+        FConstraintInstance& CI = ConstraintTemplate->DefaultInstance;
+
+        if (CI.ConstraintBone1 == NAME_None || CI.ConstraintBone2 == NAME_None)
+        {
+            CurrentPhysicsAsset->ConstraintTemplates.RemoveAt(i);
+            continue;
+        }
+
+        if (!CurrentPhysicsAsset->BodySetupIndexMap.Contains(CI.ConstraintBone1) ||
+            !CurrentPhysicsAsset->BodySetupIndexMap.Contains(CI.ConstraintBone2))
+        {
+            CurrentPhysicsAsset->ConstraintTemplates.RemoveAt(i);
+            continue;
+        }
+
+        const int32 ChildIndex = RefSkeleton.FindBoneIndex(CI.ConstraintBone1);
+        if (ChildIndex == INDEX_NONE)
+        {
+            CurrentPhysicsAsset->ConstraintTemplates.RemoveAt(i);
+            continue;
+        }
+
+        const int32 ParentBodyIndex = FindParentBodyBoneIndex(RefSkeleton, ChildIndex);
+        if (ParentBodyIndex == INDEX_NONE || !CurrentPhysicsAsset->SkeletalBodySetups.IsValidIndex(ParentBodyIndex))
+        {
+            CurrentPhysicsAsset->ConstraintTemplates.RemoveAt(i);
+            continue;
+        }
+
+        const FName ExpectedParentBone = CurrentPhysicsAsset->SkeletalBodySetups[ParentBodyIndex]->BoneName;
+        if (CI.ConstraintBone2 != ExpectedParentBone)
+        {
+            if (CI.ConstraintBone1 == ExpectedParentBone)
+            {
+                const FName Temp = CI.ConstraintBone1;
+                CI.ConstraintBone1 = CI.ConstraintBone2;
+                CI.ConstraintBone2 = Temp;
+            }
+            else
+            {
+                CI.ConstraintBone2 = ExpectedParentBone;
+            }
+            CI.JointName = FName(*FString::Printf(TEXT("[%s -> %s] Constraint"), *CI.ConstraintBone1.ToString(), *CI.ConstraintBone2.ToString()));
+        }
+
+        CI.bDisableCollision = true;
+
+        const FString Key = CI.ConstraintBone1.ToString() + TEXT("->") + CI.ConstraintBone2.ToString();
+        if (SeenPairs.Contains(Key))
+        {
+            CurrentPhysicsAsset->ConstraintTemplates.RemoveAt(i);
+            continue;
+        }
+        SeenPairs.Add(Key);
+    }
+
+    if (bAutoSave)
+    {
+        UAssetManager::Get().SavePhysicsAssets(CurrentPhysicsAsset, CurrentPhysicsAsset->GetName());
+    }
 }
 
 void PhysicsAssetEditorPanel::SetSkeletalMesh(USkeletalMesh* InSkeletalMesh)

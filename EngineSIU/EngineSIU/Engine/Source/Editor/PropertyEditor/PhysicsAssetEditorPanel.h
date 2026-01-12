@@ -59,6 +59,10 @@ private:
     // ImGui ID 관리를 위한 헬퍼
     int32 ImGuiNodeIdCounter = 0;
     int32 GetUniqueNodeID() { return ImGuiNodeIdCounter++; }
+
+    void RebuildConstraintsFromSkeleton(bool bAutoSave);
+    void CleanConstraints(bool bAutoSave);
+    int32 FindParentBodyBoneIndex(const FReferenceSkeleton& RefSkeleton, int32 ChildBoneIndex) const;
 };
 
 
